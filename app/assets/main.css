@@ -1,0 +1,83 @@
+:root {
+  --primary-color: #0450a8;
+  --background-color: #fefefe;
+  --text-color: #1a202c;
+  --shadow-color: #fff9;
+  --secondary-color: "#ffffff";
+  --action: "hover:bg-opacity-90 active:bg-opacity-80";
+  --danger: #e74c3c;
+}
+@font-face {
+  font-family: "NotoSansLao";
+  src: url("./fonts/notosanlao/NotoSansLao-Regular.eot");
+  src: url("./fonts/notosanlao/NotoSansLao-Regular.eot?#iefix")
+      format("embedded-opentype"),
+    url("./fonts/notosanlao/NotoSansLao-Regular.woff2") format("woff2"),
+    url("./fonts/notosanlao/NotoSansLao-Regular.woff") format("woff"),
+    url("./fonts/notosanlao/NotoSansLao-Regular.ttf") format("truetype"),
+    url("./fonts/notosanlao/NotoSansLao-Regular.svg#NotoSansLao-Regular")
+      format("svg");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  font-family: "NotoSansLao" !important;
+}
+
+body {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+}
+
+.input {
+  outline: 0px  solid var(--primary-color) !important;
+  color: var(--secondary-color) !important;
+}
+
+.input:focus,
+.input:hover {
+  color: var(--secondary-color) !important;
+  outline: 2px solid var(--primary-color) !important;
+}
+.input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0); /* Default icon color (white) */
+  opacity: 1;
+  cursor: pointer;
+}
+
+.input-validate {
+  color: var(--secondary-color) !important;
+  outline: 1px solid var(--danger) !important;
+}
+.textarea {
+  outline: 0px solid var(--primary-color) !important;
+  color: var(--secondary-color) !important;
+}
+
+.textarea:focus,
+.textarea:hover {
+  color: var(--secondary-color) !important;
+  outline: 1px solid var(--primary-color) !important;
+}
+
+.btn:active {
+  opacity: 0.5 !important;
+}
+
+.align-center {
+  align-items: center;
+}
+
+/* .shadow-box-inset {
+    box-shadow: inset 0 0 2rem var(--shadow-color);
+} */
+table thead tr th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+img:hover {
+  cursor: pointer;
+}
