@@ -148,7 +148,7 @@
                                                 {{
                                                     formatCurrency(
                                                         tour?.pricePerPerson ||
-                                                            0,
+                                                            "0",
                                                     )
                                                 }}
                                             </p>
@@ -243,7 +243,7 @@
                                                 {{
                                                     formatCurrency(
                                                         tour?.pricePerGroup ||
-                                                            0,
+                                                            "0",
                                                     )
                                                 }}
                                             </p>
@@ -251,7 +251,7 @@
                                                 class="text-md text-gray-500 mt-0.5 ml-1"
                                             >
                                                 Price per group ({{
-                                                    tour?.personOfGroup
+                                                    tour?.groupAmount
                                                 }}
                                                 people)
                                             </p>
@@ -295,7 +295,7 @@
                                     {{
                                         formData.tourCategory === "SINGLE"
                                             ? "Enter the number of people joining the tour"
-                                            : `Enter the number of groups (${tour?.personOfGroup} people per group)`
+                                            : `Enter the number of groups (${tour?.groupAmount} people per group)`
                                     }}
                                 </p>
                             </div>
@@ -438,15 +438,15 @@
                                                     formData.tourCategory ===
                                                         "SINGLE"
                                                         ? tour?.pricePerPerson ||
-                                                              0
+                                                              "0"
                                                         : tour?.pricePerGroup ||
-                                                              0,
+                                                              "0",
                                                 )
                                             }}
                                         </p>
                                     </div>
                                     <p class="text-2xl font-bold text-red-600">
-                                        {{ formatCurrency(totalPrice) }}
+                                        {{ formatCurrency(String(totalPrice)) }}
                                     </p>
                                 </div>
                             </div>

@@ -2,8 +2,10 @@
     <div class="min-h-screen bg-gray-50">
         <!-- Hero Section -->
         <section
-            class="relative overflow-hidden bg-white border-b border-gray-200"
+            class="relative overflow-hidden bg-white border-b border-gray-200 pt-4"
         >
+            <!-- Breadcrumb -->
+            <Breadcrumb :items="breadcrumbItems" />
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
                 <div class="text-center">
                     <h1 class="text-5xl font-bold mb-6 text-gray-900">
@@ -318,6 +320,7 @@
 <script setup>
 // Define page metadata
 definePageMeta({
+    layout: "detail",
     title: "Contact - Asasa Tour Service",
     description:
         "Get in touch with Asasa Tour Service through phone, WhatsApp, email, or Facebook. We're here to help plan your perfect journey.",
@@ -340,6 +343,16 @@ const contacts = ref({
     whatsapp: "1234567890", // Include country code without + or spaces
     email: "info@asasatour.com",
     facebook: "https://www.facebook.com/profile.php?id=61573013957178",
+});
+
+// Breadcrumb items
+const breadcrumbItems = computed(() => {
+    const items = [
+        { label: "Home", to: "/" },
+        { label: "Contact", to: "/contact" },
+    ];
+
+    return items;
 });
 </script>
 

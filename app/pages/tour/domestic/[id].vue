@@ -26,7 +26,7 @@
                             v-for="(image, index) in sliceImages"
                             :key="index"
                             :src="`${CDN()}${image}`"
-                            :alt="image?.alt || `Tour Image ${index + 1}`"
+                            :alt="`Tour Image ${index + 1}`"
                             class="w-full h-full object-cover flex-shrink-0"
                         />
                     </div>
@@ -132,7 +132,7 @@
                                 <span
                                     v-if="
                                         tourPackageStore?.tourPackage
-                                            ?.travelDays < 1
+                                            ?.travelDays || 0 < 1
                                     "
                                 >
                                     day for sightseeing
@@ -220,7 +220,7 @@
                                 {{
                                     formatCurrency(
                                         tourPackageStore?.tourPackage
-                                            ?.pricePerPerson || 0,
+                                            ?.pricePerPerson || "0",
                                     )
                                 }}
                             </p>
@@ -232,7 +232,7 @@
                                 {{
                                     formatCurrency(
                                         tourPackageStore?.tourPackage
-                                            ?.pricePerGroup || 0,
+                                            ?.pricePerGroup || "0",
                                     )
                                 }}
                             </p>
@@ -262,7 +262,7 @@
                                     >People Per Group</span
                                 >
                                 <span class="font-semibold text-gray-900">{{
-                                    tourPackageStore?.tourPackage?.personOfGroup
+                                    tourPackageStore?.tourPackage?.groupAmount
                                 }}</span>
                             </div>
                             <div
@@ -299,6 +299,7 @@
 
         <!-- Booking Dialog Component -->
         <TourBookingDilog
+            v-if="tourPackageStore?.tourPackage"
             v-model="showBookingDialog"
             :tour="tourPackageStore?.tourPackage"
             :is-processing="isBooking"
@@ -373,7 +374,8 @@
         <!-- Payment Dialog Component -->
         <PaymentDialog
             v-model="showPaymentDialog"
-            :tour="tourPackageStore?.tourPackage"
+            :booking-id="bookingId"
+            :amount="bookingAmount"
             :is-processing="isPaying"
             @submit="handlePaymentSubmit"
             @back="backToBooking"
@@ -382,6 +384,8 @@
 </template>
 
 <script setup lang="ts">
+import type { TourPackageModel } from "~/models/tourPackage";
+
 definePageMeta({
     layout: "detail",
 });
@@ -402,8 +406,10 @@ const isBooking = ref(false);
 const isPaying = ref(false);
 
 // Booking code
+const bookingId = ref();
 const bookingCode = ref("");
 const email = ref("");
+const bookingAmount = ref(0);
 
 // Image slider
 const currentImageIndex = ref(0);
@@ -511,8 +517,10 @@ const handleBookingSubmit = async (bookForm: any) => {
 
         if (data && data?.success) {
             // Store the booking code from API response
+            bookingId.value = data.data.id;
             bookingCode.value = data.data.bookCode;
             email.value = data.data.email;
+            bookingAmount.value = data.data.price;
 
             // Close booking dialog
             showBookingDialog.value = false;
@@ -603,13 +611,18 @@ const handleTouchStart = (e: TouchEvent) => {
         return; // Don't start swipe if touching a button
     }
 
-    touchStartX.value = e.touches[0].clientX;
+    const touch = e.touches?.[0];
+    if (!touch) return;
+
+    touchStartX.value = touch.clientX;
     isSwiping.value = true;
 };
 
 const handleTouchMove = (e: TouchEvent) => {
     if (!isSwiping.value) return;
-    touchEndX.value = e.touches[0].clientX;
+    const touch = e.touches?.[0];
+    if (!touch) return;
+    touchEndX.value = touch.clientX;
 };
 
 const handleTouchEnd = () => {

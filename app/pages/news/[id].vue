@@ -65,7 +65,7 @@
                         <Icon name="pajamas:eye" class="w-5 h-5" />
                         <span
                             >{{ newsStore?.news?.views }}
-                            <span v-if="newsStore?.news?.views > 1">
+                            <span v-if="(newsStore?.news?.views || 0) > 1">
                                 views</span
                             >
                             <span v-else> view</span>
@@ -193,7 +193,11 @@
                                                         )
                                                     }}</span
                                                 >
-                                                <span v-if="news?.views > 1">
+                                                <span
+                                                    v-if="
+                                                        (news?.views || 0) > 1
+                                                    "
+                                                >
                                                     views</span
                                                 >
                                                 <span v-else> view</span>
@@ -285,7 +289,8 @@
                         <!-- Image -->
                         <img
                             :src="`${CDN()}${
-                                newsStore?.news?.images[currentImageIndex]
+                                newsStore?.news?.images?.[currentImageIndex] ||
+                                ''
                             }`"
                             :alt="`Photo ${currentImageIndex + 1}`"
                             class="max-w-full max-h-full object-contain"

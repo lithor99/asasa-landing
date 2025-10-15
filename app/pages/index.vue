@@ -110,6 +110,12 @@
                             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
                             placeholder="Enter your full name"
                         />
+                        <p
+                            v-if="isRequiredFullName"
+                            class="text-xs text-red-500 mt-1 ml-1"
+                        >
+                            Full Name is required
+                        </p>
                     </div>
 
                     <!-- Email -->
@@ -125,6 +131,12 @@
                             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
                             placeholder="Enter your email"
                         />
+                        <p
+                            v-if="isRequiredEmail"
+                            class="text-xs text-red-500 mt-1 ml-1"
+                        >
+                            {{ requiredEmailText }}
+                        </p>
                     </div>
 
                     <!-- Phone Number -->
@@ -144,10 +156,37 @@
 
                     <!-- Submit Button -->
                     <button
-                        @click="handleSubmit"
-                        class="w-full bg-gray-900 text-white rounded-lg px-6 py-3 font-medium hover:bg-gray-800 transition-colors"
+                        @click="handleFollowSubmit"
+                        :disabled="isSubmitting"
+                        class="w-full bg-gray-900 text-white rounded-lg px-6 py-3 font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Submit & Follow
+                        <span v-if="!isSubmitting">Submit & Follow</span>
+                        <span
+                            v-else
+                            class="flex items-center justify-center gap-2"
+                        >
+                            <svg
+                                class="animate-spin h-5 w-5"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"
+                                ></circle>
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            Submitting...
+                        </span>
                     </button>
                 </div>
             </div>
@@ -174,7 +213,7 @@
                                 :key="value.id"
                             >
                                 <div
-                                    class="h-8 w-8 rounded-full bg-gray-800 border-2 border-white rounded-full overflow-hidden"
+                                    class="h-8 w-8 rounded-full bg-gray-800 border-2 border-white overflow-hidden"
                                 >
                                     <NuxtImg
                                         :src="`${CDN()}${value.profile}`"
@@ -259,12 +298,17 @@
                             placeholder="Input Tour ID"
                             class="w-full rounded-lg border border-gray-300 bg-gray-50 px-1 py-4 pl-5 pr-10 text-xl focus:border-gray-400 focus:outline-none focus:ring-0"
                         />
-                        <div @click="checkTour(tourId)">
+                        <button
+                            @click="checkTour(tourId)"
+                            :disabled="!tourId"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             <Icon
                                 name="carbon:next-filled"
-                                class="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 text-gray-600 hover:cursor-pointer hover:text-gray-800"
+                                class="h-10 w-10 text-gray-600 hover:cursor-pointer hover:text-gray-800 transition-colors"
+                                :class="{ 'opacity-50': !tourId }"
                             />
-                        </div>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -352,7 +396,10 @@
                             tourPlaceStore?.pagination?.count > 0
                         "
                     >
-                        <TourPlace :places="tourPlaceStore?.pagination?.rows" />
+                        <TourPlace
+                            :places="tourPlaceStore?.pagination?.rows"
+                            region=""
+                        />
                     </div>
                 </div>
 
@@ -360,7 +407,7 @@
 
                 <Pagination
                     class="my-8"
-                    v-model:currentPage="placeCurrentPage"
+                    v-model:currentPage="tourPlaceCurrentPage"
                     :totalPages="tourPlaceTotalPages"
                     @pageChange="handlePlacePageChange"
                 />
@@ -421,7 +468,7 @@
                         class="flex flex-wrap justify-center gap-4 text-gray-500 text-md"
                     >
                         <NuxtLink
-                            to="/privacy-policy"
+                            to="/policy"
                             class="underline decoration-1 mx-4 hover:text-gray-800 hover:scale-110 transition-transform duration-300 inline-block"
                         >
                             Privacy Policy
@@ -448,6 +495,7 @@
 
 <script setup lang="ts">
 const { setQueryServerSide, isQueryServerSide } = useMainStore();
+const mainStore = useMainStore();
 const tourPackageStore = useTourPackageStore();
 const tourPlaceStore = useTourPlaceStore();
 const newsStore = useNewsStore();
@@ -455,6 +503,10 @@ const followerStore = useFollowerStore();
 
 const showDialog = ref(false);
 const previewUrl = ref(null);
+const isSubmitting = ref(false);
+const isRequiredFullName = ref(false);
+const isRequiredEmail = ref(false);
+const requiredEmailText = ref("");
 
 const tourPackageLoading = ref(false);
 const tourPackageCurrentPage = ref(1);
@@ -501,7 +553,7 @@ const formData = ref({
     fullName: "",
     email: "",
     phone: "",
-    profileImage: null,
+    profile: null,
 });
 
 const tourPackageFilters: any = ref({
@@ -595,10 +647,20 @@ const handleShare = async () => {
         // Fallback: Copy to clipboard
         try {
             await navigator.clipboard.writeText(window.location.href);
-            alert("Link copied to clipboard!");
+            mainStore.setShowSnackbar({
+                isOpen: true,
+                isSuccess: true,
+                message: _tl("Link copied to clipboard!"),
+                timeout: 2000,
+            });
         } catch (error) {
             console.error("Failed to copy:", error);
-            alert("Sharing not supported on this browser");
+            mainStore.setShowSnackbar({
+                isOpen: true,
+                isSuccess: false,
+                message: _tl("Sharing not supported on this browser"),
+                timeout: 2000,
+            });
         }
     }
 };
@@ -606,36 +668,118 @@ const handleShare = async () => {
 const handleImageUpload = (event: any) => {
     const file = event.target.files[0];
     if (file) {
-        formData.value.profileImage = file;
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert("Image size must be less than 5MB");
+            return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith("image/")) {
+            alert("Please select a valid image file");
+            return;
+        }
+
+        formData.value.profile = file;
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = (e: any) => {
             previewUrl.value = e.target.result;
         };
         reader.readAsDataURL(file);
     }
 };
 
-const handleSubmit = () => {
-    if (
-        !formData.value.fullName ||
-        !formData.value.email ||
-        !formData.value.phone
-    ) {
-        alert("Please fill in all required fields");
+const validateEmail = (email: string) => {
+    // More comprehensive regex
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+};
+
+const handleFollowSubmit = async () => {
+    isRequiredEmail.value = false;
+    isRequiredFullName.value = false;
+    requiredEmailText.value = "";
+    // Validate required fields
+    if (!formData.value.fullName) {
+        isRequiredFullName.value = !formData.value.fullName;
+        return;
+    }
+    if (!formData.value.email) {
+        isRequiredEmail.value = !formData.value.email;
+        requiredEmailText.value = "Email is required";
         return;
     }
 
-    console.log("Form submitted:", formData.value);
-    alert("Successfully followed!");
+    // Validate email format
+    if (!validateEmail(formData.value.email)) {
+        isRequiredEmail.value = true;
+        requiredEmailText.value = "Please enter a valid email address";
+        return;
+    }
 
-    showDialog.value = false;
-    formData.value = {
-        fullName: "",
-        email: "",
-        phone: "",
-        profileImage: null,
-    };
-    previewUrl.value = null;
+    isSubmitting.value = true;
+
+    try {
+        // Create FormData for file upload
+        const submitData = new FormData();
+        submitData.append("fullName", formData.value.fullName);
+        submitData.append("email", formData.value.email);
+
+        if (formData.value.phone) {
+            submitData.append("phone", formData.value.phone);
+        }
+
+        if (formData.value.profile) {
+            submitData.append("profile", formData.value.profile);
+        }
+
+        // Submit to API
+        const response: any = await followerStore.create(submitData);
+
+        if (response && response.success) {
+            mainStore.setShowSnackbar({
+                isOpen: true,
+                isSuccess: true,
+                message: _tl("Successfully followed!"),
+                timeout: 2000,
+            });
+
+            // Close dialog and reset form
+            showDialog.value = false;
+            formData.value = {
+                fullName: "",
+                email: "",
+                phone: "",
+                profile: null,
+            };
+            previewUrl.value = null;
+
+            // Refresh follower list
+            await followerStore.setPagination({
+                page: "1",
+                limit: "5",
+            });
+        } else {
+            mainStore.setShowSnackbar({
+                isOpen: true,
+                isSuccess: false,
+                message: _tl(
+                    response?.message || "Failed to follow. Please try again.",
+                ),
+                timeout: 2000,
+            });
+        }
+    } catch (error) {
+        console.error("Follow submission error:", error);
+        mainStore.setShowSnackbar({
+            isOpen: true,
+            isSuccess: false,
+            message: _tl("Failed to follow. Please try again."),
+            timeout: 2000,
+        });
+    } finally {
+        isSubmitting.value = false;
+    }
 };
 
 /*

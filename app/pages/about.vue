@@ -2,8 +2,10 @@
     <div class="min-h-screen bg-gray-50">
         <!-- Hero Section -->
         <section
-            class="relative overflow-hidden bg-white border-b border-gray-200"
+            class="relative overflow-hidden bg-white border-b border-gray-200 pt-4"
         >
+            <!-- Breadcrumb -->
+            <Breadcrumb :items="breadcrumbItems" />
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
                 <div class="text-center">
                     <h1 class="text-5xl font-bold mb-6 text-gray-900">
@@ -202,6 +204,7 @@
 <script setup>
 // Define page metadata
 definePageMeta({
+    layout: "detail",
     title: "About Us - Asasa Tour Service",
     description:
         "Learn about Asasa Tour Service, your trusted partner in creating unforgettable travel experiences around the world.",
@@ -264,6 +267,16 @@ const coreValues = ref([
             "Constantly evolving and embracing new technologies to provide seamless, modern travel experiences.",
     },
 ]);
+
+// Breadcrumb items
+const breadcrumbItems = computed(() => {
+    const items = [
+        { label: "Home", to: "/" },
+        { label: "About", to: "/about" },
+    ];
+
+    return items;
+});
 
 // Handle contact button click
 const handleContact = () => {

@@ -1,13 +1,15 @@
 <template>
     <div class="min-h-screen bg-gray-50">
         <!-- Hero Section -->
-        <div class="bg-gradient-to-r from-gray-900 to-gray-700 py-16">
+        <div class="bg-white pt-4 pb-12 border-b border-gray-200 shadow-md">
+            <!-- Breadcrumb -->
+            <Breadcrumb :items="breadcrumbItems" co />
             <div class="max-w-4xl mx-auto px-4 sm:px-8 text-center">
                 <div
                     class="inline-flex items-center justify-center w-20 h-20 bg-white/10 rounded-full mb-6"
                 >
                     <svg
-                        class="h-10 w-10 text-white"
+                        class="h-10 w-10 text-gray-700"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -20,13 +22,13 @@
                         />
                     </svg>
                 </div>
-                <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-700 mb-4">
                     Privacy Policy
                 </h1>
-                <p class="text-xl text-gray-300 mb-6">
+                <p class="text-xl text-gray-600 mb-6">
                     Your privacy is important to us
                 </p>
-                <div class="text-gray-400 text-sm">
+                <div class="text-gray-600 text-sm">
                     Last updated: October 10, 2025
                 </div>
             </div>
@@ -714,6 +716,7 @@
 <script setup>
 definePageMeta({
     title: "Privacy Policy - ASASA Tour",
+    layout: "datail",
 });
 
 // Sections for quick navigation
@@ -727,6 +730,16 @@ const sections = ref([
     { id: "children-privacy", title: "Children's Privacy" },
     { id: "policy-changes", title: "Policy Changes" },
 ]);
+
+// Breadcrumb items
+const breadcrumbItems = computed(() => {
+    const items = [
+        { label: "Home", to: "/" },
+        { label: "Privacy Policy", to: "/policy" },
+    ];
+
+    return items;
+});
 
 // Scroll to top method
 const scrollToTop = () => {

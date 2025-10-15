@@ -194,7 +194,7 @@
                                             <span
                                                 v-if="
                                                     tourPlaceStore?.tourPlace
-                                                        ?.views > 1
+                                                        ?.views || 0 > 1
                                                 "
                                             >
                                                 views</span
@@ -325,9 +325,9 @@
                         <!-- Image -->
                         <img
                             :src="`${CDN()}${
-                                tourPlaceStore?.tourPlace?.images[
+                                tourPlaceStore?.tourPlace?.images?.[
                                     currentImageIndex
-                                ]
+                                ] || ''
                             }`"
                             :alt="`Photo ${currentImageIndex + 1}`"
                             class="max-w-full max-h-full object-contain"

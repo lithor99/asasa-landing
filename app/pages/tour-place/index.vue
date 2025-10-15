@@ -190,7 +190,7 @@
 
             <Pagination
                 class="my-8"
-                v-model:currentPage="placeCurrentPage"
+                v-model:currentPage="tourPlaceCurrentPage"
                 :totalPages="tourPlaceTotalPages"
                 @pageChange="handleTourPlacePageChange"
             />

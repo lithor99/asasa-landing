@@ -9,6 +9,7 @@ export interface TourBookModel extends BaseModel {
     price?: string;
     startDate?: Date;
     endDate?: Date;
+    tourCategory?: string;
     fullName?: string;
     email?: string;
     phone?: string;
@@ -26,5 +27,5 @@ export interface TourBookModel extends BaseModel {
 }
 
 export interface TourBooksPaginationModel extends PaginationModel {
-    rows: TourBooksModel[] | [];
+    rows: TourBookModel[] | [];
 }

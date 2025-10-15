@@ -37,6 +37,26 @@
                 </NuxtLink>
             </div>
 
+            <div
+                v-else-if="!booking"
+                class="bg-red-50 border border-red-200 rounded-lg p-6 text-center"
+            >
+                <Icon
+                    name="mdi:alert-circle"
+                    class="w-16 h-16 text-red-500 mx-auto mb-4"
+                />
+                <h2 class="text-xl font-bold text-red-900 mb-2">
+                    Booking Not Found
+                </h2>
+                <p class="text-red-700 mb-6">{{ error }}</p>
+                <NuxtLink
+                    to="/"
+                    class="inline-block px-6 py-3 bg-white border border-gray-400 hover:bg-gray-100 text-gray-800 rounded-lg font-medium transition-colors"
+                >
+                    Back to Home
+                </NuxtLink>
+            </div>
+
             <!-- Booking Details -->
             <div v-else-if="booking" class="space-y-6">
                 <!-- Header with Status -->
@@ -57,10 +77,12 @@
                             <!-- Booking Status Badge -->
                             <span
                                 class="inline-block px-4 py-2 rounded-full text-sm font-semibold mb-2"
-                                :class="getBookingStatusClass(booking.status)"
+                                :class="
+                                    getBookingStatusClass(booking?.status || '')
+                                "
                             >
                                 Booking Status:
-                                {{ formatStatus(booking.status) }}
+                                {{ formatStatus(booking?.status || "") }}
                             </span>
                             <!-- Payment Status Badge -->
                             <div>
@@ -68,12 +90,16 @@
                                     class="inline-block px-4 py-2 rounded-full text-sm font-semibold"
                                     :class="
                                         getPaymentStatusClass(
-                                            booking.paymentStatus,
+                                            booking?.paymentStatus || '',
                                         )
                                     "
                                 >
                                     Payment Status:
-                                    {{ formatStatus(booking.paymentStatus) }}
+                                    {{
+                                        formatStatus(
+                                            booking?.paymentStatus || "",
+                                        )
+                                    }}
                                 </span>
                             </div>
                         </div>
@@ -137,8 +163,8 @@
                     <div class="flex gap-6">
                         <!-- Package Image -->
                         <img
-                            :src="`${CDN()}${booking.package.image}`"
-                            :alt="booking.package.name.lo"
+                            :src="`${CDN()}${booking?.package?.image}`"
+                            :alt="booking?.package?.name?.lo"
                             class="w-32 h-32 object-cover rounded-lg flex-shrink-0"
                         />
                         <!-- Package Info -->
@@ -159,7 +185,7 @@
                                     />
                                     <span
                                         >{{
-                                            booking.package.travelDays
+                                            booking?.package?.travelDays
                                         }}
                                         days</span
                                     >
@@ -173,14 +199,14 @@
                                         C_TOUR_TYPE.find(
                                             (item: any) =>
                                                 item.value ===
-                                                booking.package.tourType,
+                                                booking?.package?.tourType,
                                         )?.en
                                     }}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <Icon
                                         :name="
-                                            booking.tourCategory === 'SINGLE'
+                                            booking?.tourCategory === 'SINGLE'
                                                 ? 'mdi:account'
                                                 : 'mdi:account-group'
                                         "
@@ -190,7 +216,7 @@
                                         C_TOUR_CATEGORY.find(
                                             (item: any) =>
                                                 item.value ===
-                                                booking.tourCategory,
+                                                booking?.tourCategory,
                                         )?.en
                                     }}</span>
                                 </div>
@@ -226,13 +252,8 @@
                         <div>
                             <p class="text-sm text-gray-500 mb-1">Country</p>
                             <div class="flex items-center gap-2">
-                                <img
-                                    :src="`${CDN()}${booking.country.flag}`"
-                                    :alt="booking.country.name.lo"
-                                    class="w-6 h-4 object-cover rounded"
-                                />
                                 <span class="font-semibold text-gray-900">{{
-                                    booking.country.name.lo
+                                    booking?.country?.name?.lo
                                 }}</span>
                             </div>
                         </div>
@@ -275,8 +296,10 @@
                             <span class="text-blue-600">
                                 {{
                                     formatCurrency(
-                                        Number(booking.price) *
-                                            booking.travelerAmount,
+                                        String(
+                                            Number(booking.price) *
+                                                (booking?.travelerAmount || 1),
+                                        ),
                                     )
                                 }}
                             </span>

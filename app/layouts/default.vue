@@ -7,6 +7,9 @@
             <NuxtPage />
         </main>
 
+        <!-- Snackbar - Outside main to ensure it's always on top -->
+        <Snackbar />
+
         <!-- <Footer /> -->
     </div>
 </template>
