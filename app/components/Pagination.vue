@@ -1,6 +1,6 @@
 <!-- components/Pagination.vue -->
 <template>
-    <div class="flex items-center justify-center gap-2">
+    <div class="flex items-center justify-center gap-2 px-4">
         <button
             @click="onPrevious"
             :disabled="currentPage === 1"
@@ -31,19 +31,23 @@
         </button>
 
         <div class="flex gap-2">
-            <button
-                v-for="page in totalPages"
-                :key="page"
-                @click="onPageChange(page)"
-                :class="[
-                    'rounded-lg px-4 py-2 font-medium transition-colors',
-                    currentPage === page
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50',
-                ]"
-            >
-                {{ page }}
-            </button>
+            <template v-for="(item, index) in pageNumbers" :key="index">
+                <button
+                    v-if="item !== '...'"
+                    @click="onPageChange(item)"
+                    :class="[
+                        'rounded-lg px-4 py-2 font-medium transition-colors',
+                        currentPage === item
+                            ? 'bg-gray-900 text-white'
+                            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50',
+                    ]"
+                >
+                    {{ item }}
+                </button>
+                <span v-else class="flex items-center px-2 text-gray-500">
+                    ...
+                </span>
+            </template>
         </div>
 
         <button
@@ -80,6 +84,8 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
+
 const props = defineProps({
     currentPage: {
         type: Number,
@@ -94,6 +100,37 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:currentPage", "pageChange"]);
+
+const pageNumbers = computed(() => {
+    const pages = [];
+    const total = props.totalPages;
+    const current = props.currentPage;
+
+    // If total pages is 5 or less, show all pages
+    if (total <= 5) {
+        for (let i = 1; i <= total; i++) {
+            pages.push(i);
+        }
+        return pages;
+    }
+
+    // Always show first page
+    pages.push(1);
+
+    // Calculate start and end of middle range
+    if (current <= 3) {
+        // Near the beginning
+        pages.push(2, 3, 4, "...", total);
+    } else if (current >= total - 2) {
+        // Near the end
+        pages.push("...", total - 3, total - 2, total - 1, total);
+    } else {
+        // In the middle
+        pages.push("...", current - 1, current, current + 1, "...", total);
+    }
+
+    return pages;
+});
 
 const onPrevious = () => {
     if (props.currentPage > 1) {

@@ -78,7 +78,7 @@
                                 @click="toggleDropdown"
                                 class="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-gray-900 pb-1 border-b-2 transition-colors"
                                 :class="
-                                    route.path.startsWith('/tourist-place')
+                                    route.path.startsWith('/tour-place')
                                         ? 'border-gray-900 text-gray-900'
                                         : 'border-transparent'
                                 "
@@ -106,23 +106,29 @@
                                 class="absolute top-full left-0 mt-2 w-48 rounded-lg bg-white shadow-lg border border-gray-200 py-2 z-50"
                             >
                                 <NuxtLink
-                                    to="/tourist-place"
+                                    :to="{
+                                        path: '/tour-place',
+                                        query: { region: E_REGION.NORTHERN },
+                                    }"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                     :class="
-                                        route.path === '/tourist-place'
+                                        route.query.region === E_REGION.NORTHERN
                                             ? 'bg-gray-100 font-semibold'
                                             : ''
                                     "
                                     @click="closeDropdown"
                                 >
-                                    North
+                                    Northern
                                 </NuxtLink>
 
                                 <NuxtLink
-                                    to="/tourist-place"
+                                    :to="{
+                                        path: '/tour-place',
+                                        query: { region: E_REGION.CENTER },
+                                    }"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                     :class="
-                                        route.path === '/tourist-place'
+                                        route.query.region === E_REGION.CENTER
                                             ? 'bg-gray-100 font-semibold'
                                             : ''
                                     "
@@ -132,16 +138,19 @@
                                 </NuxtLink>
 
                                 <NuxtLink
-                                    to="/tourist-place"
+                                    :to="{
+                                        path: '/tour-place',
+                                        query: { region: E_REGION.SOUTH },
+                                    }"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                     :class="
-                                        route.path === '/tourist-place'
+                                        route.query.region === E_REGION.SOUTH
                                             ? 'bg-gray-100 font-semibold'
                                             : ''
                                     "
                                     @click="closeDropdown"
                                 >
-                                    South
+                                    Southern
                                 </NuxtLink>
                             </div>
                         </div>

@@ -13,7 +13,7 @@ export default defineEventHandler((event) => {
         req.headers = {
             "sec-ch-ua": headers["sec-ch-ua"],
             "sec-ch-ua-mobile": headers["sec-ch-ua"],
-            Authorization: headers.authorization,
+            // Authorization: headers.authorization,
             "api-key": apiKey,
             platform: "MEMBER",
             lang: locale,

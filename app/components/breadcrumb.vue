@@ -1,46 +1,62 @@
-<!-- eslint-disable vue/multi-word-component-names -->
-<script setup lang="ts">
-defineProps({
-    items: {
-        type: Array as () => {
-            title: string;
-            to?: string;
-            disabled: boolean;
-        }[],
-        default: () => [],
-    },
-});
-</script>
 <template>
-    <div
-        class="bg-secondary p-2 border-l-2 border-secondary md:flex justify-between items-center"
-    >
-        <div class="text-lg font-medium flex items-center space-x-2">
-            <template v-for="(item, index) in items" :key="index">
-                <nuxt-link
-                    v-if="item.to && !item.disabled"
-                    :to="item.disabled ? '' : item.to"
-                    :disabled="item.disabled"
-                    :class="`${
-                        item.disabled
-                            ? 'cursor-default'
-                            : 'text-white font-bold hover:underline'
-                    } `"
+    <nav class="mb-4">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <ol class="flex items-center space-x-2 text-sm">
+                <li
+                    v-for="(item, index) in breadcrumbs"
+                    :key="index"
+                    class="flex items-center"
                 >
-                    {{ item.title }}
-                </nuxt-link>
-                <span v-else class="text-gray-400">{{ item.title }}</span>
+                    <!-- Separator -->
+                    <svg
+                        v-if="index > 0"
+                        class="w-4 h-4 text-gray-400 mx-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5l7 7-7 7"
+                        />
+                    </svg>
 
-                <Icon
-                    v-if="index < items.length - 1"
-                    name="uiw:right"
-                    class="text-gray-400"
-                    mode="svg"
-                />
-            </template>
+                    <!-- Link or Text -->
+                    <NuxtLink
+                        v-if="item.to && index !== breadcrumbs.length - 1"
+                        :to="item.to"
+                        class="text-gray-600 hover:text-gray-900 transition-colors font-medium"
+                    >
+                        {{ item.label }}
+                    </NuxtLink>
+                    <span
+                        v-else
+                        class="text-gray-900 font-semibold"
+                        :class="{
+                            'line-clamp-1': index === breadcrumbs.length - 1,
+                        }"
+                    >
+                        {{ item.label }}
+                    </span>
+                </li>
+            </ol>
         </div>
-        <div>
-            <slot></slot>
-        </div>
-    </div>
+    </nav>
 </template>
+
+<script setup lang="ts">
+interface BreadcrumbItem {
+    label: string;
+    to?: string;
+}
+
+interface Props {
+    items: BreadcrumbItem[];
+}
+
+const props = defineProps<Props>();
+
+const breadcrumbs = computed(() => props.items);
+</script>

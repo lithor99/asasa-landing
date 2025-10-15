@@ -1,58 +1,92 @@
 <template>
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-gray-50 pt-4 pb-12">
+        <!-- Breadcrumb -->
+        <Breadcrumb :items="breadcrumbItems" />
         <!-- Hero Section with Image -->
-        <div class="relative h-[60vh] md:h-[70vh] overflow-hidden">
-            <img
-                :src="news.image"
-                :alt="news.title"
-                class="w-full h-full object-cover"
-            />
-            <div
-                class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"
-            ></div>
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="relative group">
+                <img
+                    :src="`${CDN()}${newsStore?.news?.image}`"
+                    :alt="newsStore?.news?.name?.lo"
+                    class="w-full object-cover rounded-lg shadow-md"
+                    :style="{ height: '70vh' }"
+                />
 
-            <!-- Title & Info Overlay -->
-            <div
-                class="absolute bottom-0 left-0 right-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8"
-            ></div>
+                <!-- Overlay - no container classes -->
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent rounded-lg"
+                >
+                    <!-- Content with container classes if needed -->
+                    <!-- <div class="h-full flex items-end mx-6 py-4">
+                        <h1 class="text-white text-4xl font-bold">
+                            {{ newsStore?.news?.name?.lo }}
+                        </h1>
+                    </div> -->
+                </div>
+            </div>
         </div>
 
         <!-- Main Content -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="bg-white rounded-xl shadow-md p-6 md:p-8 mb-8">
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    {{ news.title }}
+                    {{ newsStore?.news?.name?.lo }}
                 </h1>
                 <div class="flex items-center gap-4 text-md text-gray-500 mb-6">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mx-2">
                         <Icon name="mdi:calendar" class="w-5 h-5" />
-                        <span>{{ formatDate(news.publishedDate) }}</span>
+                        <span>{{
+                            formatDate(newsStore?.news?.createdAt)
+                        }}</span>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mx-2">
+                        <span class="flex items-center gap-1">
+                            <svg
+                                class="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            {{ countDays(newsStore?.news?.createdAt) }}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 mx-2">
                         <Icon name="mdi:account-circle" class="w-5 h-5" />
-                        <span>{{ news.author }}</span>
+                        <span>By Admin</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <Icon name="mdi:eye" class="w-5 h-5" />
-                        <span>{{ news.views }} views</span>
+                    <div class="flex items-center gap-2 mx-2">
+                        <Icon name="pajamas:eye" class="w-5 h-5" />
+                        <span
+                            >{{ newsStore?.news?.views }}
+                            <span v-if="newsStore?.news?.views > 1">
+                                views</span
+                            >
+                            <span v-else> view</span>
+                        </span>
                     </div>
                 </div>
+
+                <p class="text-gray-700 text-lg leading-relaxed">
+                    {{ newsStore?.news?.detail?.lo }}
+                </p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Column -->
                 <div class="lg:col-span-2 space-y-8">
-                    <!-- Content Section -->
-                    <div class="bg-white rounded-xl shadow-md p-6 md:p-8">
-                        <div
-                            class="prose prose-lg max-w-none"
-                            v-html="news.content"
-                        ></div>
-                    </div>
-
                     <!-- Image Gallery -->
                     <div
-                        v-if="news.images && news.images.length > 0"
+                        v-if="
+                            newsStore?.news?.images &&
+                            newsStore?.news?.images.length > 0
+                        "
                         class="bg-white rounded-xl shadow-md p-6 md:p-8"
                     >
                         <h2
@@ -71,7 +105,8 @@
                             "
                         >
                             <div
-                                v-for="(image, index) in news.images"
+                                v-for="(image, index) in newsStore?.news
+                                    ?.images"
                                 :key="index"
                                 v-show="showAllImages || index < 6"
                                 :class="getImageClass(index)"
@@ -79,8 +114,8 @@
                                 @click="openGallery(index)"
                             >
                                 <img
-                                    :src="image"
-                                    :alt="`${news.title} - Photo ${index + 1}`"
+                                    :src="`${CDN()}${image}`"
+                                    :alt="`Photo ${index + 1}`"
                                     class="w-full h-full object-cover"
                                 />
                             </div>
@@ -88,7 +123,7 @@
 
                         <!-- Show More Button -->
                         <div
-                            v-if="news.images.length > 6"
+                            v-if="newsStore?.news?.images.length > 6"
                             class="mt-6 flex justify-center"
                         >
                             <div
@@ -109,38 +144,60 @@
                             <h3
                                 class="text-xl font-bold text-gray-900 mb-4 pb-4 border-b"
                             >
-                                Related Articles
+                                Related News
                             </h3>
                             <div class="space-y-4">
                                 <a
-                                    v-for="(
-                                        relatedNews, index
-                                    ) in news.relatedNews"
+                                    v-for="(news, index) in relatedNews"
                                     :key="index"
                                     href="#"
                                     class="block group"
                                 >
-                                    <div class="flex gap-3">
+                                    <div
+                                        @click.prevent="readRelateNews(news.id)"
+                                        class="flex gap-3"
+                                    >
                                         <img
-                                            :src="relatedNews.image"
-                                            :alt="relatedNews.title"
+                                            :src="`${CDN()}${news?.image}`"
+                                            :alt="news?.name?.lo"
                                             class="w-20 h-20 object-cover rounded-lg"
                                         />
                                         <div class="flex-1">
                                             <h4
                                                 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 text-sm"
                                             >
-                                                {{ relatedNews.title }}
+                                                {{ news?.name?.lo }}
                                             </h4>
-                                            <p
-                                                class="text-xs text-gray-500 mt-1"
+                                            <div
+                                                class="flex items-center text-xs text-gray-500 mt-1"
                                             >
+                                                <Icon
+                                                    name="mdi:calendar"
+                                                    class="w-3 h-3 text-gray-400 mr-1"
+                                                />
                                                 {{
-                                                    formatDate(
-                                                        relatedNews.publishedDate,
-                                                    )
+                                                    formatDate(news?.createdAt)
                                                 }}
-                                            </p>
+                                            </div>
+                                            <div
+                                                class="flex items-center text-xs text-gray-500 mt-1"
+                                            >
+                                                <Icon
+                                                    name="pajamas:eye"
+                                                    class="w-3 h-3 text-gray-400 mr-1"
+                                                />
+                                                <span class="mr-1">
+                                                    {{
+                                                        formatNumber(
+                                                            news?.views,
+                                                        )
+                                                    }}</span
+                                                >
+                                                <span v-if="news?.views > 1">
+                                                    views</span
+                                                >
+                                                <span v-else> view</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </a>
@@ -150,99 +207,306 @@
                 </div>
             </div>
         </div>
+
+        <!-- Image Gallery Dialog/Lightbox -->
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition-opacity duration-300"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-300"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div
+                    v-if="isGalleryOpen"
+                    class="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+                    @click="closeGallery"
+                >
+                    <!-- Close Button -->
+                    <button
+                        @click.stop="closeGallery"
+                        class="absolute top-4 right-4 z-50 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
+                        aria-label="Close gallery"
+                    >
+                        <svg
+                            class="w-8 h-8"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+
+                    <!-- Image Counter -->
+                    <div
+                        class="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-black/50 text-white rounded-full text-sm"
+                    >
+                        {{ currentImageIndex + 1 }} /
+                        {{ newsStore?.news?.images?.length || 0 }}
+                    </div>
+
+                    <!-- Main Image Container -->
+                    <div
+                        class="relative w-full h-full flex items-center justify-center p-4 md:p-8"
+                        @click.stop
+                    >
+                        <!-- Previous Button -->
+                        <button
+                            v-if="
+                                newsStore?.news?.images &&
+                                newsStore?.news?.images.length > 1
+                            "
+                            @click.stop="previousImage"
+                            class="absolute left-4 z-50 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+                            aria-label="Previous image"
+                        >
+                            <svg
+                                class="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M15 19l-7-7 7-7"
+                                />
+                            </svg>
+                        </button>
+
+                        <!-- Image -->
+                        <img
+                            :src="`${CDN()}${
+                                newsStore?.news?.images[currentImageIndex]
+                            }`"
+                            :alt="`Photo ${currentImageIndex + 1}`"
+                            class="max-w-full max-h-full object-contain"
+                        />
+
+                        <!-- Next Button -->
+                        <button
+                            v-if="
+                                newsStore?.news?.images &&
+                                newsStore?.news?.images.length > 1
+                            "
+                            @click.stop="nextImage"
+                            class="absolute right-4 z-50 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+                            aria-label="Next image"
+                        >
+                            <svg
+                                class="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5l7 7-7 7"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Thumbnail Strip (Optional) -->
+                    <div
+                        class="absolute bottom-4 left-0 right-0 z-50 px-4"
+                        @click.stop
+                    >
+                        <div
+                            class="flex gap-2 overflow-x-auto pb-2 justify-center scrollbar-hide"
+                        >
+                            <button
+                                v-for="(image, index) in newsStore?.news
+                                    ?.images"
+                                :key="index"
+                                @click.stop="currentImageIndex = index"
+                                class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all"
+                                :class="
+                                    currentImageIndex === index
+                                        ? 'border-white scale-110'
+                                        : 'border-transparent opacity-50 hover:opacity-100'
+                                "
+                            >
+                                <img
+                                    :src="`${CDN()}${image}`"
+                                    :alt="`Thumbnail ${index + 1}`"
+                                    class="w-full h-full object-cover"
+                                />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
     </div>
 </template>
 
 <script setup lang="ts">
-interface News {
-    id: number;
-    title: string;
-    excerpt: string;
-    content: string;
-    category: string;
-    author: string;
-    publishedDate: string;
-    views: number;
-    image: string;
-    images?: string[];
-    tags?: string[];
-    relatedNews?: Array<{
-        title: string;
-        image: string;
-        publishedDate: string;
-    }>;
-}
-
-// Sample data - replace with API call or props
-const news = ref<News>({
-    id: 1,
-    title: "Laos Tourism Industry Shows Strong Recovery in 2024",
-    excerpt:
-        "The tourism sector in Laos has demonstrated remarkable resilience, with visitor numbers reaching pre-pandemic levels. This growth is attributed to enhanced marketing efforts, improved infrastructure, and the country's unique cultural offerings that continue to attract international travelers.",
-    content: `
-        <p class="mb-4">The tourism industry in Laos has shown impressive growth throughout 2024, marking a significant milestone in the country's economic recovery. According to recent statistics from the Ministry of Information, Culture and Tourism, international arrivals have increased by 45% compared to the previous year.</p>
-        
-        <h3 class="text-2xl font-bold mt-6 mb-3">Key Factors Driving Growth</h3>
-        <p class="mb-4">Several factors have contributed to this positive trend. The government's strategic initiatives to promote sustainable tourism, coupled with investments in infrastructure development, have made Laos more accessible to international visitors. Popular destinations such as Luang Prabang, Vang Vieng, and the 4000 Islands continue to draw tourists seeking authentic cultural experiences.</p>
-        
-        <h3 class="text-2xl font-bold mt-6 mb-3">Economic Impact</h3>
-        <p class="mb-4">The tourism boom has created thousands of jobs across the country, benefiting local communities and supporting small businesses. Hotels, restaurants, and tour operators have reported increased bookings, contributing significantly to the national economy.</p>
-        
-        <h3 class="text-2xl font-bold mt-6 mb-3">Future Outlook</h3>
-        <p class="mb-4">Industry experts remain optimistic about the future, projecting continued growth as Laos positions itself as a must-visit destination in Southeast Asia. Ongoing efforts to preserve cultural heritage while modernizing facilities are expected to attract even more visitors in the coming years.</p>
-    `,
-    category: "tourism",
-    author: "Somsak Phommavong",
-    publishedDate: "2024-10-15",
-    views: 2847,
-    image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a",
-    images: [
-        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
-        "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800",
-        "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
-        "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1",
-        "https://images.unsplash.com/photo-1530789253388-582c481c54b0",
-        "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
-        "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
-        "https://images.unsplash.com/photo-1472214103451-9374bd1c798e",
-    ],
-    tags: ["tourism", "economy", "travel", "laos", "southeast-asia"],
-    relatedNews: [
-        {
-            title: "New UNESCO Heritage Sites Announced in Laos",
-            image: "https://images.unsplash.com/photo-1528127269322-539801943592",
-            publishedDate: "2024-10-10",
-        },
-        {
-            title: "Sustainable Tourism Practices Gain Momentum",
-            image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800",
-            publishedDate: "2024-10-08",
-        },
-        {
-            title: "Vientiane International Airport Expansion Complete",
-            image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05",
-            publishedDate: "2024-10-05",
-        },
-    ],
+definePageMeta({
+    layout: "detail",
 });
+const { setQueryServerSide, isQueryServerSide } = useMainStore();
+const newsStore = useNewsStore();
+const route = useRoute();
+// const { id } = route.params;
 
+const newsLoading = ref(false);
 const showAllImages = ref(false);
 
-// Format date
-const formatDate = (dateString: string): string => {
-    const options: Intl.DateTimeFormatOptions = {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    };
-    return new Date(dateString).toLocaleDateString("en-US", options);
+// Gallery state
+const isGalleryOpen = ref(false);
+const currentImageIndex = ref(0);
+
+/**
+ *  onMounted
+ */
+onMounted(async () => {
+    if (!isQueryServerSide) {
+        const { id } = route.params;
+        newsLoading.value = true;
+        await newsStore.setOne(id as string);
+
+        await newsStore.setPagination({
+            page: "1",
+            limit: "3",
+            sortBy: "createdAt",
+            order: "DESC",
+        });
+        newsLoading.value = false;
+    }
+    await setQueryServerSide(false);
+});
+
+if (import.meta.server) {
+    newsLoading.value = true;
+    const { id } = route.params;
+    await newsStore.setOne(id as string);
+    await newsStore.setPagination({
+        page: "1",
+        limit: "3",
+        sortBy: "createdAt",
+        order: "DESC",
+    });
+    newsLoading.value = false;
+}
+
+// Breadcrumb items
+const breadcrumbItems = computed(() => {
+    const items = [
+        { label: "Home", to: "/" },
+        { label: "News", to: "/news" },
+        { label: "News Detail", to: `/news` },
+    ];
+
+    return items;
+});
+
+// Filter related news to exclude current news
+const relatedNews = computed(() => {
+    const currentId = route.params.id;
+    const allNews = newsStore?.pagination?.rows || [];
+
+    // Filter out the current news item
+    return allNews.filter((news: any) => String(news.id) !== currentId);
+});
+
+// Watch for route changes to reload data
+watch(
+    () => route.params.id,
+    async (newId, oldId) => {
+        // Only reload if ID actually changed and it's not the initial load
+        if (newId && oldId && newId !== oldId) {
+            // Close gallery if open
+            if (isGalleryOpen.value) {
+                closeGallery();
+            }
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: "smooth" });
+
+            // Load new news data
+            await loadNewsData(newId as string);
+        }
+    },
+);
+
+// Function to load news data
+const loadNewsData = async (newsId: string) => {
+    newsLoading.value = true;
+    await newsStore.setOne(newsId);
+    await newsStore.setPagination({
+        page: "1",
+        limit: "3",
+        sortBy: "createdAt",
+        order: "DESC",
+    });
+    newsLoading.value = false;
 };
 
-// Gallery function
-const openGallery = (index: number) => {
-    console.log("Open gallery at index:", index);
-    // Implement lightbox/modal gallery here
+const readRelateNews = async (id: string) => {
+    window.location.href = `/news/${id}`;
 };
+
+// Gallery functions
+const openGallery = (index: number) => {
+    currentImageIndex.value = index;
+    isGalleryOpen.value = true;
+    // Prevent body scroll when gallery is open
+    document.body.style.overflow = "hidden";
+};
+
+const closeGallery = () => {
+    isGalleryOpen.value = false;
+    // Restore body scroll
+    document.body.style.overflow = "";
+};
+
+const nextImage = () => {
+    const images = newsStore?.news?.images || [];
+    if (images.length > 0) {
+        currentImageIndex.value = (currentImageIndex.value + 1) % images.length;
+    }
+};
+
+const previousImage = () => {
+    const images = newsStore?.news?.images || [];
+    if (images.length > 0) {
+        currentImageIndex.value =
+            currentImageIndex.value === 0
+                ? images.length - 1
+                : currentImageIndex.value - 1;
+    }
+};
+
+// Keyboard navigation
+const handleKeyPress = (e: KeyboardEvent) => {
+    if (!isGalleryOpen.value) return;
+
+    if (e.key === "Escape") closeGallery();
+    if (e.key === "ArrowRight") nextImage();
+    if (e.key === "ArrowLeft") previousImage();
+};
+
+// Add keyboard event listener
+onMounted(() => {
+    window.addEventListener("keydown", handleKeyPress);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("keydown", handleKeyPress);
+    // Cleanup body overflow in case component unmounts while gallery is open
+    document.body.style.overflow = "";
+});
 
 // Get dynamic image classes
 const getImageClass = (index: number): string => {

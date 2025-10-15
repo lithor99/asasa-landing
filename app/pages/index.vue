@@ -200,7 +200,10 @@
                         </span>
                     </div>
                 </div>
-                <button class="text-gray-500 hover:text-gray-700">
+                <button
+                    @click="handleShare"
+                    class="text-gray-500 hover:text-gray-700"
+                >
                     <svg
                         class="h-6 w-6"
                         fill="none"
@@ -251,11 +254,12 @@
                     <div class="py-2 text-xl">Check Tour</div>
                     <div class="relative w-full">
                         <input
+                            v-model="tourId"
                             type="text"
                             placeholder="Input Tour ID"
                             class="w-full rounded-lg border border-gray-300 bg-gray-50 px-1 py-4 pl-5 pr-10 text-xl focus:border-gray-400 focus:outline-none focus:ring-0"
                         />
-                        <div @click="checkTour">
+                        <div @click="checkTour(tourId)">
                             <Icon
                                 name="carbon:next-filled"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 text-gray-600 hover:cursor-pointer hover:text-gray-800"
@@ -322,12 +326,14 @@
                         Popular Tour Places
                     </h2>
                     <NuxtLink
-                        to="/tourist-places"
+                        to="/tour-place"
                         class="underline decoration-1 text-gray-600 hover:text-gray-900 hover:scale-110"
                     >
                         See more
                     </NuxtLink>
                 </div>
+
+                <!-- Tour Places -->
                 <div>
                     <div v-if="tourPlaceLoading">
                         <LoadingCard :item="tourPlaceItemsPerPage" />
@@ -377,7 +383,19 @@
                 </div>
 
                 <div>
-                    <News :articles="paginatedNews" @read-article="readNews" />
+                    <div v-if="newsLoading">
+                        <LoadingCard :item="newsItemsPerPage" />
+                    </div>
+                    <div
+                        v-if="!newsLoading && newsStore?.pagination?.count < 1"
+                    >
+                        <EmptyCard @refresh="handleNewsRefresh" />
+                    </div>
+                    <div
+                        v-if="!newsLoading && newsStore?.pagination?.count > 0"
+                    >
+                        <News :news="newsStore?.pagination?.rows" />
+                    </div>
                 </div>
 
                 <!-- Pagination -->
@@ -385,7 +403,7 @@
                     class="my-8"
                     v-model:currentPage="newsCurrentPage"
                     :totalPages="newsTotalPages"
-                    @pageChange="onPageChange"
+                    @pageChange="handleNewsPageChange"
                 />
 
                 <!-- Contact Section -->
@@ -429,34 +447,28 @@
 </template>
 
 <script setup lang="ts">
-import { TourPackage } from "#components";
-import {
-    type TourPackageModel,
-    type TourPackagePaginationModel,
-} from "~/models/tourPackage";
-import { useTourPlaceStore } from "~/stores/tourPlace";
-
 const { setQueryServerSide, isQueryServerSide } = useMainStore();
 const tourPackageStore = useTourPackageStore();
 const tourPlaceStore = useTourPlaceStore();
 const newsStore = useNewsStore();
 const followerStore = useFollowerStore();
 
-const tourPackageLoading = ref(false);
-const tourPlaceLoading = ref(false);
-const newsLoading = ref(false);
-
 const showDialog = ref(false);
 const previewUrl = ref(null);
 
+const tourPackageLoading = ref(false);
 const tourPackageCurrentPage = ref(1);
 const tourPackageItemsPerPage = ref(3);
 
+const tourPlaceLoading = ref(false);
 const tourPlaceCurrentPage = ref(1);
 const tourPlaceItemsPerPage = ref(3);
 
+const newsLoading = ref(false);
 const newsCurrentPage = ref(1);
 const newsItemsPerPage = ref(3);
+
+const tourId = ref("");
 
 // Detect screen size and set items per page
 const updateItemsPerPage = () => {
@@ -513,8 +525,6 @@ const newsFilters: any = ref({
     order: "DESC",
 });
 
-const followerFillters: any = ref();
-
 /**
  *  onMounted
  */
@@ -534,9 +544,8 @@ onMounted(async () => {
         await tourPlaceStore.setPagination(tourPlaceFilters.value);
         await newsStore.setPagination(newsFilters.value);
         await followerStore.setPagination({
-            ...followerFillters.value,
-            page: 1,
-            limit: 5,
+            page: "1",
+            limit: "5",
         });
 
         tourPackageLoading.value = false;
@@ -560,15 +569,39 @@ if (import.meta.server) {
     tourPlaceStore.setPagination(tourPlaceFilters.value);
     newsStore.setPagination(newsFilters.value);
     followerStore.setPagination({
-        ...followerFillters.value,
-        page: 1,
-        limit: 5,
+        page: "1",
+        limit: "5",
     });
 
     tourPackageLoading.value = false;
     tourPlaceLoading.value = false;
     newsLoading.value = false;
 }
+
+const handleShare = async () => {
+    // Check if Web Share API is supported
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: "ASASA Tour Service",
+                text: "Click the link to visit ASASA Tour services",
+                url: window.location.href,
+            });
+            console.log("Shared successfully");
+        } catch (error) {
+            console.log("Error sharing:", error);
+        }
+    } else {
+        // Fallback: Copy to clipboard
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            alert("Link copied to clipboard!");
+        } catch (error) {
+            console.error("Failed to copy:", error);
+            alert("Sharing not supported on this browser");
+        }
+    }
+};
 
 const handleImageUpload = (event: any) => {
     const file = event.target.files[0];
@@ -605,348 +638,6 @@ const handleSubmit = () => {
     previewUrl.value = null;
 };
 
-// Tour Places Data
-const tourPlaces = ref([
-    {
-        id: 1,
-        name: "Kuang Si Waterfalls",
-        description:
-            "Stunning turquoise cascading waterfalls surrounded by lush jungle, perfect for swimming and photography",
-        location: "Luang Prabang",
-        region: "north",
-        category: "waterfall",
-        rating: 4.9,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Swimming", "Hiking", "Photography"],
-    },
-    {
-        id: 2,
-        name: "Wat Xieng Thong",
-        description:
-            "Ancient Buddhist temple with exquisite architecture and historical significance",
-        location: "Luang Prabang",
-        region: "north",
-        category: "temple",
-        rating: 4.8,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["UNESCO Site", "Architecture", "History"],
-    },
-    {
-        id: 3,
-        name: "Pha That Luang",
-        description:
-            "Golden stupa and national symbol of Laos, a must-visit landmark in Vientiane",
-        location: "Vientiane",
-        region: "central",
-        category: "cultural",
-        rating: 4.7,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Iconic", "Religious", "Photography"],
-    },
-    {
-        id: 4,
-        name: "Blue Lagoon",
-        description:
-            "Crystal clear natural pool perfect for swimming and cliff jumping in stunning surroundings",
-        location: "Vang Vieng",
-        region: "central",
-        category: "nature",
-        rating: 4.6,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Swimming", "Adventure", "Nature"],
-    },
-    {
-        id: 5,
-        name: "Bolaven Plateau",
-        description:
-            "Highland region known for coffee plantations, waterfalls, and cool climate",
-        location: "Pakse",
-        region: "south",
-        category: "nature",
-        rating: 4.8,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Coffee", "Waterfalls", "Trekking"],
-    },
-    {
-        id: 6,
-        name: "Si Phan Don (4000 Islands)",
-        description:
-            "Peaceful river archipelago with laid-back atmosphere and rare Irrawaddy dolphins",
-        location: "Champasak",
-        region: "south",
-        category: "nature",
-        rating: 4.9,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Dolphins", "Islands", "Relaxation"],
-    },
-    {
-        id: 7,
-        name: "Plain of Jars",
-        description:
-            "Mysterious ancient megalithic stone jars scattered across the landscape",
-        location: "Xieng Khouang",
-        region: "north",
-        category: "cultural",
-        rating: 4.7,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["UNESCO Site", "Mystery", "History"],
-    },
-    {
-        id: 8,
-        name: "Tham Kong Lo Cave",
-        description: "Massive 7km long river cave that can be explored by boat",
-        location: "Khammouane",
-        region: "central",
-        category: "adventure",
-        rating: 4.8,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Cave", "Boat Tour", "Adventure"],
-    },
-    {
-        id: 9,
-        name: "Mount Phousi",
-        description:
-            "Sacred hill offering panoramic views of Luang Prabang and surrounding mountains",
-        location: "Luang Prabang",
-        region: "north",
-        category: "nature",
-        rating: 4.6,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Sunset", "Views", "Temple"],
-    },
-    {
-        id: 10,
-        name: "Patuxai Monument",
-        description:
-            "Victory monument resembling the Arc de Triomphe with observation deck",
-        location: "Vientiane",
-        region: "central",
-        category: "cultural",
-        rating: 4.5,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Monument", "Views", "Architecture"],
-    },
-    {
-        id: 11,
-        name: "Tad Fane Waterfall",
-        description: "Twin waterfalls plunging dramatically into a deep gorge",
-        location: "Champasak",
-        region: "south",
-        category: "waterfall",
-        rating: 4.7,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Waterfall", "Viewpoint", "Nature"],
-    },
-    {
-        id: 12,
-        name: "Buddha Park (Xieng Khuan)",
-        description:
-            "Sculpture park featuring over 200 Hindu and Buddhist statues",
-        location: "Vientiane",
-        region: "central",
-        category: "cultural",
-        rating: 4.6,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Sculptures", "Unique", "Photography"],
-    },
-]);
-
-// News Data
-const newsList = ref([
-    {
-        id: 1,
-        title: "New Heritage Trail Opens in Luang Prabang",
-        excerpt:
-            "A newly designed walking trail connects major UNESCO heritage sites, offering visitors an immersive cultural experience through the ancient city.",
-        date: "Oct 8, 2025",
-        readTime: 5,
-        category: "tourism",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Michael Chen",
-            avatar: "https://i.pravatar.cc/150?img=2",
-        },
-        views: 1234,
-        isNew: true,
-    },
-    {
-        id: 2,
-        title: "Traditional Baci Ceremony: A Complete Guide",
-        excerpt:
-            "Learn about the spiritual significance and proper etiquette of Laos' most important traditional ceremony for welcoming guests and blessing journeys.",
-        date: "Oct 7, 2025",
-        readTime: 6,
-        category: "culture",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Lisa Wong",
-            avatar: "https://i.pravatar.cc/150?img=3",
-        },
-        views: 890,
-        isNew: true,
-    },
-    {
-        id: 3,
-        title: "Rock Climbing Paradise: Vang Vieng's New Routes",
-        excerpt:
-            "Adventure seekers rejoice as Vang Vieng unveils 20 new climbing routes on its stunning limestone cliffs, ranging from beginner to advanced levels.",
-        date: "Oct 6, 2025",
-        readTime: 7,
-        category: "adventure",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "David Miller",
-            avatar: "https://i.pravatar.cc/150?img=4",
-        },
-        views: 1567,
-        isNew: false,
-    },
-    {
-        id: 4,
-        title: "Luxury Resort Opens on Mekong Riverfront",
-        excerpt:
-            "A new five-star eco-resort combines luxury amenities with sustainable practices, offering breathtaking river views and authentic local experiences.",
-        date: "Oct 5, 2025",
-        readTime: 5,
-        category: "hotels",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Emma Davis",
-            avatar: "https://i.pravatar.cc/150?img=5",
-        },
-        views: 2103,
-        isNew: false,
-    },
-    {
-        id: 5,
-        title: "10 Essential Phrases for Traveling in Laos",
-        excerpt:
-            "Master these basic Lao phrases to connect with locals, navigate markets, and enhance your travel experience in this friendly Southeast Asian nation.",
-        date: "Oct 4, 2025",
-        readTime: 4,
-        category: "travel-tips",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "James Wilson",
-            avatar: "https://i.pravatar.cc/150?img=6",
-        },
-        views: 3421,
-        isNew: false,
-    },
-    {
-        id: 6,
-        title: "Boun That Luang Festival Returns in November",
-        excerpt:
-            "The country's most important Buddhist festival will feature traditional ceremonies, parades, and cultural performances at the iconic golden stupa.",
-        date: "Oct 3, 2025",
-        readTime: 6,
-        category: "events",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Sophia Lee",
-            avatar: "https://i.pravatar.cc/150?img=7",
-        },
-        views: 1789,
-        isNew: false,
-    },
-    {
-        id: 7,
-        title: "Exploring Bolaven Plateau's Coffee Culture",
-        excerpt:
-            "Discover how this highland region produces some of Southeast Asia's finest coffee and learn about the sustainable farming practices of local communities.",
-        date: "Oct 2, 2025",
-        readTime: 8,
-        category: "culture",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Robert Brown",
-            avatar: "https://i.pravatar.cc/150?img=8",
-        },
-        views: 1456,
-        isNew: false,
-    },
-    {
-        id: 8,
-        title: "Kayaking the Nam Ou River: Adventure Guide",
-        excerpt:
-            "Navigate one of Laos' most scenic rivers through remote villages, caves, and dramatic limestone karst landscapes on this multi-day adventure.",
-        date: "Oct 1, 2025",
-        readTime: 7,
-        category: "adventure",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Jennifer Taylor",
-            avatar: "https://i.pravatar.cc/150?img=9",
-        },
-        views: 2234,
-        isNew: false,
-    },
-    {
-        id: 9,
-        title: "Budget Backpacker's Guide to Laos",
-        excerpt:
-            "Travel Laos on a shoestring budget with these insider tips on affordable accommodation, cheap eats, and free or low-cost activities.",
-        date: "Sep 30, 2025",
-        readTime: 9,
-        category: "travel-tips",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Alex Martinez",
-            avatar: "https://i.pravatar.cc/150?img=10",
-        },
-        views: 4567,
-        isNew: false,
-    },
-    {
-        id: 10,
-        title: "New Flights Connect Bangkok to Pakse",
-        excerpt:
-            "Increased air connectivity makes southern Laos more accessible with three new weekly direct flights launching next month.",
-        date: "Sep 29, 2025",
-        readTime: 4,
-        category: "tourism",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Rachel Green",
-            avatar: "https://i.pravatar.cc/150?img=11",
-        },
-        views: 1890,
-        isNew: false,
-    },
-    {
-        id: 11,
-        title: "Boutique Hotels Leading Sustainable Tourism",
-        excerpt:
-            "Small-scale accommodations across Laos are setting new standards for eco-friendly practices and community-based tourism development.",
-        date: "Sep 28, 2025",
-        readTime: 6,
-        category: "hotels",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Kevin Anderson",
-            avatar: "https://i.pravatar.cc/150?img=12",
-        },
-        views: 1234,
-        isNew: false,
-    },
-    {
-        id: 12,
-        title: "Elephant Conservation: Ethical Tourism Guide",
-        excerpt:
-            "Learn how to visit elephants responsibly in Laos and support sanctuaries that prioritize animal welfare and conservation over entertainment.",
-        date: "Sep 27, 2025",
-        readTime: 7,
-        category: "tourism",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Maria Garcia",
-            avatar: "https://i.pravatar.cc/150?img=13",
-        },
-        views: 2876,
-        isNew: false,
-    },
-]);
-
 /*
  * Computed properties for pagination
  */
@@ -979,10 +670,8 @@ const handleTourPageChange = async (page: number) => {
     tourPackageLoading.value = true;
     tourPackageCurrentPage.value = page;
     tourPackageFilters.value.page = page;
-    setTimeout(async () => {
-        await tourPackageStore.setPagination(tourPackageFilters.value);
-        tourPackageLoading.value = false;
-    }, 5000);
+    await tourPackageStore.setPagination(tourPackageFilters.value);
+    tourPackageLoading.value = false;
 };
 
 // Tour Places Pagination Handler
@@ -990,10 +679,8 @@ const handlePlacePageChange = async (page: number) => {
     tourPlaceLoading.value = true;
     tourPlaceCurrentPage.value = page;
     tourPlaceFilters.value.page = page;
-    setTimeout(async () => {
-        await tourPlaceStore.setPagination(tourPlaceFilters.value);
-        tourPlaceLoading.value = false;
-    }, 5000);
+    await tourPlaceStore.setPagination(tourPlaceFilters.value);
+    tourPlaceLoading.value = false;
 };
 
 // News Pagination Handler
@@ -1001,14 +688,12 @@ const handleNewsPageChange = async (page: number) => {
     newsLoading.value = true;
     newsCurrentPage.value = page;
     newsFilters.value.page = page;
-    setTimeout(async () => {
-        await newsStore.setPagination(newsFilters.value);
-        newsLoading.value = false;
-    }, 5000);
+    await newsStore.setPagination(newsFilters.value);
+    newsLoading.value = false;
 };
 
 /*
- * Pagination handlers
+ * Refresh handlers
  */
 
 // Tour package refresh handler
@@ -1038,27 +723,7 @@ const handleNewsRefresh = async () => {
     newsLoading.value = false;
 };
 
-const checkTour = (article) => {
-    console.log("Check tour:");
-    alert("Check tour");
-    // navigateTo(`/news/${article.id}`);
-};
-
-const viewTour = (tour) => {
-    console.log("View tour:", tour);
-    navigateTo(`/tour/domestic/${tour.id}`);
-};
-
-const bookTour = () => {
-    console.log("Book tour clicked!");
-    alert("Booking tour...");
-};
-
-const viewPlaceDetails = (place) => {
-    navigateTo(`/tourist-place/${place.id}`);
-};
-
-const readNews = (article) => {
-    navigateTo(`/news/${article.id}`);
+const checkTour = (tourId: string) => {
+    navigateTo(`/tour/check/${tourId}`);
 };
 </script>

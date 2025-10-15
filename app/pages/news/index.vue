@@ -25,378 +25,221 @@
         </div>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-12">
+        <main class="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8">
             <!-- Filter Section -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <!-- Search -->
-                    <div class="md:col-span-2">
-                        <div class="relative">
-                            <input
-                                v-model="searchQuery"
-                                type="text"
-                                placeholder="Search news..."
-                                class="w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                <div class="md:col-span-2">
+                    <div class="relative">
+                        <input
+                            v-model="search"
+                            @keyup.enter="handleSearch"
+                            type="text"
+                            placeholder="Search places..."
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 pr-24 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                        />
+
+                        <!-- Search Icon (Left) -->
+                        <svg
+                            class="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                             />
-                            <svg
-                                class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                        </svg>
+
+                        <!-- Right Side Buttons -->
+                        <div
+                            class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1"
+                        >
+                            <!-- Clear Button -->
+                            <Transition
+                                enter-active-class="transition-opacity duration-200"
+                                leave-active-class="transition-opacity duration-200"
+                                enter-from-class="opacity-0"
+                                leave-to-class="opacity-0"
                             >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
+                                <button
+                                    v-if="search"
+                                    @click="handleRefresh"
+                                    type="button"
+                                    class="p-1 mr-1 hover:bg-gray-200 rounded-full transition-colors"
+                                    title="Clear"
+                                >
+                                    <svg
+                                        class="h-4 w-4 text-gray-400 hover:text-gray-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
+                                    </svg>
+                                </button>
+                            </Transition>
+
+                            <!-- Search Button -->
+                            <button
+                                @click="handleSearch"
+                                type="button"
+                                class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="!search.trim()"
+                            >
+                                Search
+                            </button>
                         </div>
                     </div>
-
-                    <!-- Sort By -->
-                    <div>
-                        <select
-                            v-model="sortBy"
-                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-                        >
-                            <option value="latest">Latest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="popular">Most Popular</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Category Tabs -->
-            <div class="mb-8">
-                <div class="flex flex-wrap gap-3">
-                    <button
-                        @click="selectedCategory = ''"
-                        :class="[
-                            'px-5 py-2 rounded-full font-medium transition-colors',
-                            selectedCategory === ''
-                                ? 'bg-white text-gray-900 border border-2 border-gray-600'
-                                : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-600 hover:text-gray-800',
-                        ]"
-                    >
-                        All News
-                    </button>
-                    <button
-                        v-for="cat in categories"
-                        :key="cat.value"
-                        @click="selectedCategory = cat.value"
-                        :class="[
-                            'px-5 py-2 rounded-full font-medium transition-colors',
-                            selectedCategory === cat.value
-                                ? 'bg-white text-gray-900 border border-2 border-gray-600'
-                                : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-600 hover:text-gray-800',
-                        ]"
-                    >
-                        {{ cat.label }}
-                    </button>
                 </div>
             </div>
 
             <!-- Results Count -->
             <div class="mb-6">
                 <h2 class="text-2xl font-bold text-gray-900">
-                    {{ filteredNews.length }} Articles Found
+                    {{ newsStore?.pagination?.count }} items
                 </h2>
             </div>
 
             <!-- News Grid -->
 
             <div>
-                <News :articles="paginatedNews" @read-article="readNews" />
+                <div v-if="newsLoading">
+                    <LoadingCard :item="newsItemsPerPage" />
+                </div>
+                <div v-if="!newsLoading && newsStore?.pagination?.count < 1">
+                    <EmptyCard @refresh="handleRefresh" />
+                </div>
+                <div v-if="!newsLoading && newsStore?.pagination?.count > 0">
+                    <News :news="newsStore?.pagination?.rows" />
+                </div>
             </div>
 
             <!-- Pagination -->
             <Pagination
                 class="my-8"
-                v-model:currentPage="currentPage"
-                :totalPages="totalPages"
-                @pageChange="onPageChange"
+                v-model:currentPage="newsCurrentPage"
+                :totalPages="newsTotalPages"
+                @pageChange="handleNewsPageChange"
             />
         </main>
     </div>
 </template>
 
-<script setup>
-import { News } from "#components";
+<script setup lang="ts">
+const { setQueryServerSide, isQueryServerSide } = useMainStore();
+const newsStore = useNewsStore();
 
-definePageMeta({
-    title: "News & Updates - ASASA Tour",
-});
+const newsLoading = ref(false);
+const newsCurrentPage = ref(1);
+const newsItemsPerPage = ref(3);
 
-// State
-const searchQuery = ref("");
-const selectedCategory = ref("");
-const sortBy = ref("latest");
-const currentPage = ref(1);
-const itemsPerPage = 6;
+const search = ref("");
 
-// Categories
-const categories = [
-    { label: "Tourism", value: "tourism" },
-    { label: "Culture", value: "culture" },
-    { label: "Adventure", value: "adventure" },
-    { label: "Hotels", value: "hotels" },
-    { label: "Travel Tips", value: "travel-tips" },
-    { label: "Events", value: "events" },
-];
+// Detect screen size and set items per page
+const updateItemsPerPage = () => {
+    const width = window.innerWidth;
 
-// News data
-const newsArticles = ref([
-    {
-        id: 1,
-        title: "New Heritage Trail Opens in Luang Prabang",
-        excerpt:
-            "A newly designed walking trail connects major UNESCO heritage sites, offering visitors an immersive cultural experience through the ancient city.",
-        date: "Oct 8, 2025",
-        readTime: 5,
-        category: "tourism",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Michael Chen",
-            avatar: "https://i.pravatar.cc/150?img=2",
-        },
-        views: 1234,
-        isNew: true,
-    },
-    {
-        id: 2,
-        title: "Traditional Baci Ceremony: A Complete Guide",
-        excerpt:
-            "Learn about the spiritual significance and proper etiquette of Laos' most important traditional ceremony for welcoming guests and blessing journeys.",
-        date: "Oct 7, 2025",
-        readTime: 6,
-        category: "culture",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Lisa Wong",
-            avatar: "https://i.pravatar.cc/150?img=3",
-        },
-        views: 890,
-        isNew: true,
-    },
-    {
-        id: 3,
-        title: "Rock Climbing Paradise: Vang Vieng's New Routes",
-        excerpt:
-            "Adventure seekers rejoice as Vang Vieng unveils 20 new climbing routes on its stunning limestone cliffs, ranging from beginner to advanced levels.",
-        date: "Oct 6, 2025",
-        readTime: 7,
-        category: "adventure",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "David Miller",
-            avatar: "https://i.pravatar.cc/150?img=4",
-        },
-        views: 1567,
-        isNew: false,
-    },
-    {
-        id: 4,
-        title: "Luxury Resort Opens on Mekong Riverfront",
-        excerpt:
-            "A new five-star eco-resort combines luxury amenities with sustainable practices, offering breathtaking river views and authentic local experiences.",
-        date: "Oct 5, 2025",
-        readTime: 5,
-        category: "hotels",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Emma Davis",
-            avatar: "https://i.pravatar.cc/150?img=5",
-        },
-        views: 2103,
-        isNew: false,
-    },
-    {
-        id: 5,
-        title: "10 Essential Phrases for Traveling in Laos",
-        excerpt:
-            "Master these basic Lao phrases to connect with locals, navigate markets, and enhance your travel experience in this friendly Southeast Asian nation.",
-        date: "Oct 4, 2025",
-        readTime: 4,
-        category: "travel-tips",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "James Wilson",
-            avatar: "https://i.pravatar.cc/150?img=6",
-        },
-        views: 3421,
-        isNew: false,
-    },
-    {
-        id: 6,
-        title: "Boun That Luang Festival Returns in November",
-        excerpt:
-            "The country's most important Buddhist festival will feature traditional ceremonies, parades, and cultural performances at the iconic golden stupa.",
-        date: "Oct 3, 2025",
-        readTime: 6,
-        category: "events",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Sophia Lee",
-            avatar: "https://i.pravatar.cc/150?img=7",
-        },
-        views: 1789,
-        isNew: false,
-    },
-    {
-        id: 7,
-        title: "Exploring Bolaven Plateau's Coffee Culture",
-        excerpt:
-            "Discover how this highland region produces some of Southeast Asia's finest coffee and learn about the sustainable farming practices of local communities.",
-        date: "Oct 2, 2025",
-        readTime: 8,
-        category: "culture",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Robert Brown",
-            avatar: "https://i.pravatar.cc/150?img=8",
-        },
-        views: 1456,
-        isNew: false,
-    },
-    {
-        id: 8,
-        title: "Kayaking the Nam Ou River: Adventure Guide",
-        excerpt:
-            "Navigate one of Laos' most scenic rivers through remote villages, caves, and dramatic limestone karst landscapes on this multi-day adventure.",
-        date: "Oct 1, 2025",
-        readTime: 7,
-        category: "adventure",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Jennifer Taylor",
-            avatar: "https://i.pravatar.cc/150?img=9",
-        },
-        views: 2234,
-        isNew: false,
-    },
-    {
-        id: 9,
-        title: "Budget Backpacker's Guide to Laos",
-        excerpt:
-            "Travel Laos on a shoestring budget with these insider tips on affordable accommodation, cheap eats, and free or low-cost activities.",
-        date: "Sep 30, 2025",
-        readTime: 9,
-        category: "travel-tips",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Alex Martinez",
-            avatar: "https://i.pravatar.cc/150?img=10",
-        },
-        views: 4567,
-        isNew: false,
-    },
-    {
-        id: 10,
-        title: "New Flights Connect Bangkok to Pakse",
-        excerpt:
-            "Increased air connectivity makes southern Laos more accessible with three new weekly direct flights launching next month.",
-        date: "Sep 29, 2025",
-        readTime: 4,
-        category: "tourism",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Rachel Green",
-            avatar: "https://i.pravatar.cc/150?img=11",
-        },
-        views: 1890,
-        isNew: false,
-    },
-    {
-        id: 11,
-        title: "Boutique Hotels Leading Sustainable Tourism",
-        excerpt:
-            "Small-scale accommodations across Laos are setting new standards for eco-friendly practices and community-based tourism development.",
-        date: "Sep 28, 2025",
-        readTime: 6,
-        category: "hotels",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Kevin Anderson",
-            avatar: "https://i.pravatar.cc/150?img=12",
-        },
-        views: 1234,
-        isNew: false,
-    },
-    {
-        id: 12,
-        title: "Elephant Conservation: Ethical Tourism Guide",
-        excerpt:
-            "Learn how to visit elephants responsibly in Laos and support sanctuaries that prioritize animal welfare and conservation over entertainment.",
-        date: "Sep 27, 2025",
-        readTime: 7,
-        category: "tourism",
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        author: {
-            name: "Maria Garcia",
-            avatar: "https://i.pravatar.cc/150?img=13",
-        },
-        views: 2876,
-        isNew: false,
-    },
-]);
-
-// Computed properties
-const filteredNews = computed(() => {
-    let result = newsArticles.value;
-
-    // Filter by category
-    if (selectedCategory.value) {
-        result = result.filter(
-            (article) => article.category === selectedCategory.value,
-        );
+    if (width < 806) {
+        // sm - Mobile (Tailwind sm breakpoint)
+        newsItemsPerPage.value = 1;
+    } else if (width >= 806 && width < 1024) {
+        // md - Tablet (Tailwind md breakpoint)
+        newsItemsPerPage.value = 4;
+    } else {
+        // lg and above - Desktop
+        newsItemsPerPage.value = 6;
     }
 
-    // Search filter
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        result = result.filter(
-            (article) =>
-                article.title.toLowerCase().includes(query) ||
-                article.excerpt.toLowerCase().includes(query) ||
-                article.category.toLowerCase().includes(query),
-        );
-    }
-
-    // Sort
-    if (sortBy.value === "latest") {
-        result = [...result].sort(
-            (a, b) => new Date(b.date) - new Date(a.date),
-        );
-    } else if (sortBy.value === "oldest") {
-        result = [...result].sort(
-            (a, b) => new Date(a.date) - new Date(b.date),
-        );
-    } else if (sortBy.value === "popular") {
-        result = [...result].sort((a, b) => b.views - a.views);
-    }
-
-    return result;
-});
-
-const totalPages = computed(() => {
-    return Math.ceil(filteredNews.value.length / itemsPerPage);
-});
-
-const paginatedNews = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredNews.value.slice(start, end);
-});
-
-// Methods
-const readNews = (article) => {
-    navigateTo(`/news/${article.id}`);
+    // Update filters with new items per page
+    newsFilters.value.limit = newsItemsPerPage.value;
 };
 
-// Watch for filter changes to reset page
-watch([searchQuery, selectedCategory, sortBy], () => {
-    currentPage.value = 1;
+const newsFilters: any = ref({
+    page: newsCurrentPage.value,
+    limit: newsItemsPerPage.value,
+    sortBy: "createdAt",
+    order: "DESC",
 });
+
+/**
+ *  onMounted
+ */
+onMounted(async () => {
+    // Set items per page based on screen size
+    updateItemsPerPage();
+
+    // Add resize listener
+    window.addEventListener("resize", updateItemsPerPage);
+
+    if (!isQueryServerSide) {
+        newsLoading.value = true;
+        await newsStore.setPagination(newsFilters.value);
+        newsLoading.value = false;
+    }
+    await setQueryServerSide(false);
+});
+
+// Cleanup resize listener
+onUnmounted(() => {
+    window.removeEventListener("resize", updateItemsPerPage);
+});
+
+if (import.meta.server) {
+    newsLoading.value = true;
+    newsStore.setPagination(newsFilters.value);
+    newsLoading.value = false;
+}
+
+/*
+ * Computed properties for pagination
+ */
+
+const newsTotalPages = computed(() => {
+    return Math.ceil(newsStore.pagination.count / newsItemsPerPage.value);
+});
+
+/*
+ * Pagination handlers
+ */
+const handleNewsPageChange = async (page: number) => {
+    newsLoading.value = true;
+    newsCurrentPage.value = page;
+    newsFilters.value.page = page;
+    await newsStore.setPagination(newsFilters.value);
+    newsLoading.value = false;
+};
+
+/*
+ * Search handlers
+ */
+const handleSearch = async () => {
+    if (!search.value.trim()) return;
+    newsLoading.value = true;
+    newsCurrentPage.value = 1;
+    newsFilters.value.page = 1;
+    newsFilters.value.search = search.value.trim();
+    await newsStore.setPagination(newsFilters.value);
+    newsLoading.value = false;
+};
+
+/*
+ * Refresh handlers
+ */
+const handleRefresh = async () => {
+    newsLoading.value = true;
+    newsCurrentPage.value = 1;
+    newsFilters.value.page = 1;
+    search.value = "";
+    newsFilters.value.search = "";
+    await newsStore.setPagination(newsFilters.value);
+    newsLoading.value = false;
+};
 </script>

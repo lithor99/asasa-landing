@@ -99,122 +99,60 @@ export const GENDER = [
         label: "FEMALE",
     },
 ];
-export const USER_STATUS = [
-    {
-        value: "ACTIVE",
-        label: "ACTIVE",
-    },
-    {
-        value: "INACTIVE",
-        label: "INACTIVE",
-    },
-];
-export const MENUS_ITEMS = [
-    // {
-    //     name: "dashboard",
-    //     routeFullPath: "/owner/",
-    //     active: false,
-    //     menuIcon: "radix-icons:dashboard",
-    //     children: [],
-    // },
-    {
-        name: "land",
-        routeFullPath: "/owner/land",
-        active: false,
-        menuIcon: "lucide:land-plot",
-        children: [
-            {
-                name: "land_item",
-                routeFullPath: "/owner/land/all",
-                active: false,
-                menuIcon: "",
-            },
-            {
-                name: "buy_sell",
-                routeFullPath: "/owner/land/buy-sell",
-                active: false,
-                menuIcon: "",
-            },
-        ],
-    },
-    // {
-    //     name: "bonus",
-    //     routeFullPath: "/bonus",
-    //     active: false,
-    //     menuIcon: "iconoir:gift",
-    //     children: [],
-    // },
-    // {
-    //     name: "upgrade_vip",
-    //     routeFullPath: "/vip/package",
-    //     active: false,
-    //     menuIcon: "mingcute:vip-1-line",
-    //     children: [],
-    // },
-    // {
-    //     name: "language",
-    //     routeFullPath: "/language",
-    //     active: false,
-    //     menuIcon: "material-symbols-light:language",
-    //     children: [],
-    // },
-];
 
-export const OWNER_MENUS_BOTTOM = [
+export const C_TOUR_TYPE = [
     {
-        name: "dashboard",
-        routeFullPath: "/owner",
-        active: false,
-        menuIcon: "radix-icons:dashboard",
-        children: [],
+        value: "DOMESTIC",
+        en: "Domestic",
+        lo: "ທົວພາຍໃນປະເທດ",
     },
     {
-        name: "bonus",
-        routeFullPath: "/owner/bonus",
-        active: false,
-        menuIcon: "iconoir:gift",
-        children: [],
-    },
-    {
-        name: "customer_mode",
-        routeFullPath: "/backToCustomerMode",
-        active: false,
-        menuIcon: "ph:user-switch-light",
-        children: [],
+        value: "INTERNATIONAL",
+        en: "International",
+        lo: "ທົວຕ່າງປະເທດ",
     },
 ];
 
-export const MENU_MAIN_DASHBOARD = [
+export const C_TOUR_CATEGORY = [
     {
-        name: "land",
-        icon: "tabler:map-2",
-        to: "/land/home",
+        value: "SINGLE",
+        en: "Solo tour",
+        lo: "ທົວພາຍໃນປະເທດ",
     },
     {
-        name: "condo",
-        icon: "ph:building-apartment-bold",
-        to: "/land/home",
+        value: "GROUP",
+        en: "Group tour",
+        lo: "ທົວຕ່າງປະເທດ",
+    },
+];
+
+export const C_REGION = [
+    {
+        value: "NORTHERN",
+        en: "Northern",
+        lo: "ພາກເໜືອ",
+        color: "bg-blue-600",
     },
     {
-        name: "hotel",
-        icon: "la:hotel",
-        to: "/land/home",
+        value: "CENTER",
+        en: "Central",
+        lo: "ພາກກາງ",
+        color: "bg-yellow-600",
     },
     {
-        name: "apartment",
-        icon: "hugeicons:house-04",
-        to: "/land/home",
+        value: "SOUTH",
+        en: "Southern",
+        lo: "ພາກໃຕ້",
+        color: "bg-green-600",
     },
-    // {
-    //   name: "Profile",
-    //   icon: "gg:profile",
-    //   to: "/profile",
-    // },
-    // {
-    //   name: "Settings",
-    //   icon: "lets-icons:setting-line",
-    //   to: "/settings",
-    // },
+];
+
+export const  C_COUNTRY = [
+    {
+        value: "LA",
+        en: "Laos",
+        lo: "ປະເທດລາວ",
+    }
 ];
 
 export const LAND_MENUS_BOTTOM = [
@@ -254,12 +192,4 @@ export const LAND_MENUS_BOTTOM = [
         icon: "ion:exit-outline",
         children: [],
     },
-
-    // {
-    //     title: "profile",
-    //     to: "/land/profile",
-    //     active: false,
-    //     icon: "gg:profile",
-    //     children: [],
-    // },
 ];

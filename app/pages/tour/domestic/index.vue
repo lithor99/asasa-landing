@@ -25,65 +25,78 @@
         </div>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-12">
-            <!-- Filter Section -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8">
+            <!-- Filter & Search Section -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <!-- Duration Filter -->
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                            Tour Type
-                        </label>
-                        <select
-                            v-model="filters.tourType"
-                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-                        >
-                            <option value="">All type</option>
-                            <option value="SOLO">Solo tour</option>
-                            <option value="GROUP">Group tours</option>
-                        </select>
-                    </div>
+                <div class="md:col-span-2">
+                    <div class="relative">
+                        <input
+                            v-model="search"
+                            @keyup.enter="handleSearch"
+                            type="text"
+                            placeholder="Search places..."
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 pr-24 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                        />
 
-                    <!-- Price Range Filter -->
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"
+                        <!-- Search Icon (Left) -->
+                        <svg
+                            class="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                         >
-                            Price Range
-                        </label>
-                        <select
-                            v-model="filters.priceRange"
-                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-                        >
-                            <option value="">All Prices</option>
-                            <option value="0-200">Under $200</option>
-                            <option value="200-500">$200 - $500</option>
-                            <option value="500+">$500+</option>
-                        </select>
-                    </div>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                        </svg>
 
-                    <!-- Sort By -->
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"
+                        <!-- Right Side Buttons -->
+                        <div
+                            class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1"
                         >
-                            Sort By
-                        </label>
-                        <select
-                            v-model="sortBy"
-                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-                        >
-                            <option value="popular">Most Popular</option>
-                            <option value="price-low">
-                                Price: Low to High
-                            </option>
-                            <option value="price-high">
-                                Price: High to Low
-                            </option>
-                            <option value="duration">Duration</option>
-                        </select>
+                            <!-- Clear Button -->
+                            <Transition
+                                enter-active-class="transition-opacity duration-200"
+                                leave-active-class="transition-opacity duration-200"
+                                enter-from-class="opacity-0"
+                                leave-to-class="opacity-0"
+                            >
+                                <button
+                                    v-if="search"
+                                    @click="handRefresh"
+                                    type="button"
+                                    class="p-1 mr-1 hover:bg-gray-200 rounded-full transition-colors"
+                                    title="Clear"
+                                >
+                                    <svg
+                                        class="h-4 w-4 text-gray-400 hover:text-gray-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
+                                    </svg>
+                                </button>
+                            </Transition>
+
+                            <!-- Search Button -->
+                            <button
+                                @click="handleSearch"
+                                type="button"
+                                class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="!search.trim()"
+                            >
+                                Search
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -92,26 +105,41 @@
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-bold text-gray-900">
-                        Available Tours ({{ filteredTours.length }})
+                        Available Tours ({{
+                            tourPackageStore?.pagination?.count || 0
+                        }})
                     </h2>
                 </div>
             </div>
 
             <div>
-                <TourPackage
-                    :tours="paginatedTours"
-                    @book-tour="bookTour"
-                    @view-tour="viewTour"
-                />
+                <div v-if="tourPackageLoading">
+                    <LoadingCard :item="tourPackageItemsPerPage" />
+                </div>
+                <div
+                    v-if="
+                        !tourPackageLoading &&
+                        tourPackageStore?.pagination?.count < 1
+                    "
+                >
+                    <EmptyCard @refresh="handRefresh" />
+                </div>
+                <div
+                    v-if="
+                        !tourPackageLoading &&
+                        tourPackageStore?.pagination?.count > 0
+                    "
+                >
+                    <TourPackage :tours="tourPackageStore?.pagination?.rows" />
+                </div>
             </div>
-
-            <!-- Pagination -->
+            <!-- Tour Pagination -->
 
             <Pagination
                 class="my-8"
-                v-model:currentPage="currentPage"
-                :totalPages="totalPages"
-                @pageChange="onPageChange"
+                v-model:currentPage="tourPackageCurrentPage"
+                :totalPages="tourPackageTotalPages"
+                @pageChange="handleTourPageChange"
             />
 
             <!-- Why Choose Our Domestic Tours -->
@@ -204,230 +232,126 @@
     </div>
 </template>
 
-<script setup>
-import { TourPackage } from "#components";
+<script setup lang="ts">
+const { setQueryServerSide, isQueryServerSide } = useMainStore();
+const tourPackageStore = useTourPackageStore();
 
-definePageMeta({
-    title: "Domestic Tours - ASASA Tour",
+const showDialog = ref(false);
+const previewUrl = ref(null);
+
+const tourPackageLoading = ref(false);
+const tourPackageCurrentPage = ref(1);
+const tourPackageItemsPerPage = ref(3);
+
+const search = ref("");
+
+const tourPackageFilters: any = ref({
+    page: tourPackageCurrentPage.value,
+    limit: tourPackageItemsPerPage.value,
+    sortBy: "createdAt",
+    order: "DESC",
 });
 
-// Filter states
-const filters = ref({
-    tourType: "",
-    priceRange: "",
-});
+// Detect screen size and set items per page
+const updateItemsPerPage = () => {
+    const width = window.innerWidth;
 
-const sortBy = ref("popular");
-const currentPage = ref(1);
-const itemsPerPage = 6;
-
-// Tours data
-const tours = ref([
-    {
-        id: 1,
-        title: "Luang Prabang Heritage Tour",
-        description:
-            "Explore UNESCO World Heritage temples, traditional villages, and the famous Kuang Si Falls",
-        location: "Luang Prabang",
-        duration: "3 Days",
-        price: 299,
-        rating: 4.8,
-        reviews: 124,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        features: ["Hotel", "Meals", "Guide", "Transport"],
-        badge: "Popular",
-    },
-    {
-        id: 2,
-        title: "Vientiane City Discovery",
-        description:
-            "Discover the capital city's temples, monuments, and vibrant local markets",
-        location: "Vientiane",
-        duration: "2 Days",
-        price: 189,
-        rating: 4.6,
-        reviews: 89,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        features: ["Hotel", "Breakfast", "Guide"],
-        badge: null,
-    },
-    {
-        id: 3,
-        title: "Vang Vieng Adventure",
-        description:
-            "Experience kayaking, cave exploration, and stunning limestone karst landscapes",
-        location: "Vang Vieng",
-        duration: "4 Days",
-        price: 349,
-        rating: 4.9,
-        reviews: 156,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        features: ["Camping", "Activities", "Guide", "Equipment"],
-        badge: "Adventure",
-    },
-    {
-        id: 4,
-        title: "Pakse & 4000 Islands",
-        description:
-            "Cruise the Mekong River and explore the beautiful Si Phan Don archipelago",
-        location: "Pakse",
-        duration: "5 Days",
-        price: 449,
-        rating: 4.7,
-        reviews: 98,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        features: ["Hotel", "All Meals", "Boat", "Guide"],
-        badge: null,
-    },
-    {
-        id: 5,
-        title: "Plain of Jars Mystery Tour",
-        description:
-            "Uncover the mysteries of ancient megalithic jars scattered across the plateau",
-        location: "Xieng Khouang",
-        duration: "3 Days",
-        price: 279,
-        rating: 4.5,
-        reviews: 67,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        features: ["Hotel", "Meals", "Guide", "Entrance Fees"],
-        badge: null,
-    },
-    {
-        id: 6,
-        title: "Savannakhet Cultural Experience",
-        description:
-            "Immerse yourself in French colonial architecture and local culture",
-        location: "Savannakhet",
-        duration: "2 Days",
-        price: 169,
-        rating: 4.4,
-        reviews: 54,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        features: ["Hotel", "Breakfast", "Guide"],
-        badge: null,
-    },
-    {
-        id: 7,
-        title: "Northern Laos Trekking",
-        description:
-            "Trek through remote villages and experience authentic hill tribe culture",
-        location: "Phongsaly",
-        duration: "6 Days",
-        price: 599,
-        rating: 4.9,
-        reviews: 87,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        features: ["Homestay", "All Meals", "Guide", "Trekking Gear"],
-        badge: "Adventure",
-    },
-    {
-        id: 8,
-        title: "Bolaven Plateau Coffee Tour",
-        description:
-            "Visit coffee plantations, waterfalls, and ethnic minority villages",
-        location: "Pakse",
-        duration: "3 Days",
-        price: 329,
-        rating: 4.7,
-        reviews: 72,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        features: ["Hotel", "Meals", "Guide", "Coffee Tasting"],
-        badge: null,
-    },
-    {
-        id: 9,
-        title: "Mekong River Cruise",
-        description:
-            "Relaxing river cruise with stops at traditional villages and temples",
-        location: "Luang Prabang",
-        duration: "2 Days",
-        price: 389,
-        rating: 4.8,
-        reviews: 112,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        features: ["Cruise", "All Meals", "Guide", "Activities"],
-        badge: "Luxury",
-    },
-]);
-
-// Computed properties
-const filteredTours = computed(() => {
-    let result = tours.value;
-
-    // Filter by destination
-    // if (filters.value.destination) {
-    //     result = result.filter((tour) =>
-    //         tour.location
-    //             .toLowerCase()
-    //             .includes(filters.value.destination.toLowerCase()),
-    //     );
-    // }
-
-    // Filter by packagae type
-    if (filters.value.tourType) {
-        result = result.filter((tour) =>
-            tour.title
-                .toLowerCase()
-                .includes(filters.value.tourType.toLowerCase()),
-        );
+    if (width < 806) {
+        // sm - Mobile (Tailwind sm breakpoint)
+        tourPackageItemsPerPage.value = 2;
+    } else if (width >= 806 && width < 1024) {
+        // md - Tablet (Tailwind md breakpoint)
+        tourPackageItemsPerPage.value = 4;
+    } else {
+        // lg and above - Desktop
+        tourPackageItemsPerPage.value = 6;
     }
 
-    // Filter by price range
-    if (filters.value.priceRange) {
-        result = result.filter((tour) => {
-            if (filters.value.priceRange === "0-200") return tour.price < 200;
-            if (filters.value.priceRange === "200-500")
-                return tour.price >= 200 && tour.price <= 500;
-            if (filters.value.priceRange === "500+") return tour.price > 500;
-            return true;
-        });
-    }
-
-    // Sort
-    if (sortBy.value === "price-low") {
-        result = [...result].sort((a, b) => a.price - b.price);
-    } else if (sortBy.value === "price-high") {
-        result = [...result].sort((a, b) => b.price - a.price);
-    } else if (sortBy.value === "duration") {
-        result = [...result].sort(
-            (a, b) => parseInt(a.duration) - parseInt(b.duration),
-        );
-    } else if (sortBy.value === "popular") {
-        result = [...result].sort((a, b) => b.rating - a.rating);
-    }
-
-    return result;
-});
-
-const totalPages = computed(() => {
-    return Math.ceil(filteredTours.value.length / itemsPerPage);
-});
-
-const paginatedTours = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredTours.value.slice(start, end);
-});
-
-// Methods
-const viewTour = (tour) => {
-    console.log("View tour:", tour);
-    navigateTo(`/tour/domestic/${tour.id}`);
+    // Update filters with new items per page
+    tourPackageFilters.value.limit = tourPackageItemsPerPage.value;
 };
 
-const bookTour = () => {
-    console.log("Book tour:");
-    alert("Book tour");
-    // navigateTo(`/booking/${tour.id}`);
+/**
+ *  onMounted
+ */
+onMounted(async () => {
+    // Set items per page based on screen size
+    updateItemsPerPage();
+
+    // Add resize listener
+    window.addEventListener("resize", updateItemsPerPage);
+
+    if (!isQueryServerSide) {
+        tourPackageLoading.value = true;
+        await tourPackageStore.setPagination(tourPackageFilters.value);
+        tourPackageLoading.value = false;
+    }
+    await setQueryServerSide(false);
+});
+
+// Cleanup resize listener
+onUnmounted(() => {
+    window.removeEventListener("resize", updateItemsPerPage);
+});
+
+if (import.meta.server) {
+    tourPackageLoading.value = true;
+
+    tourPackageStore.setPagination(tourPackageFilters.value);
+
+    tourPackageLoading.value = false;
+}
+
+/*
+ * Computed properties for pagination
+ */
+
+const tourPackageTotalPages = computed(() => {
+    return Math.ceil(
+        tourPackageStore.pagination.count / tourPackageItemsPerPage.value,
+    );
+});
+
+/*
+ * Pagination handlers
+ */
+
+const handleTourPageChange = async (page: number) => {
+    tourPackageLoading.value = true;
+    tourPackageCurrentPage.value = page;
+    tourPackageFilters.value.page = page;
+    setTimeout(async () => {
+        await tourPackageStore.setPagination(tourPackageFilters.value);
+        tourPackageLoading.value = false;
+    }, 5000);
 };
 
-// Watch for filter changes to reset page
-watch(
-    [filters, sortBy],
-    () => {
-        currentPage.value = 1;
-    },
-    { deep: true },
-);
+/*
+ * Search handlers
+ */
+const handleSearch = async () => {
+    if (!search.value.trim()) return;
+
+    tourPackageLoading.value = true;
+    tourPackageCurrentPage.value = 1;
+    tourPackageFilters.value.page = 1;
+    tourPackageFilters.value.search = search.value.trim();
+    await tourPackageStore.setPagination(tourPackageFilters.value);
+    tourPackageLoading.value = false;
+};
+
+/*
+ * Refresh handlers
+ */
+
+// Tour package refresh handler
+const handRefresh = async () => {
+    tourPackageLoading.value = true;
+    tourPackageCurrentPage.value = 1;
+    tourPackageFilters.value.page = 1;
+    search.value = "";
+    tourPackageFilters.value.search = "";
+    await tourPackageStore.setPagination(tourPackageFilters.value);
+    tourPackageLoading.value = false;
+};
 </script>

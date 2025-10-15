@@ -31,10 +31,10 @@
                 <div class="border-b border-gray-200">
                     <nav class="flex justify-center gap-8">
                         <button
-                            @click="selectedRegion = 'all'"
+                            @click="onRegionSelect('')"
                             :class="[
                                 'py-2 px-6 text-lg font-medium border-b-2 transition-colors',
-                                selectedRegion === 'all'
+                                selectedRegion === ''
                                     ? 'border-gray-800 text-gray-800'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                             ]"
@@ -42,10 +42,10 @@
                             All Places
                         </button>
                         <button
-                            @click="selectedRegion = 'north'"
+                            @click="onRegionSelect(E_REGION.NORTHERN)"
                             :class="[
                                 'py-2 px-6 text-lg font-medium border-b-2 transition-colors',
-                                selectedRegion === 'north'
+                                selectedRegion === E_REGION.NORTHERN
                                     ? 'border-gray-800 text-gray-800'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                             ]"
@@ -53,10 +53,10 @@
                             Northern Laos
                         </button>
                         <button
-                            @click="selectedRegion = 'central'"
+                            @click="onRegionSelect(E_REGION.CENTER)"
                             :class="[
                                 'py-2 px-6 text-lg font-medium border-b-2 transition-colors',
-                                selectedRegion === 'central'
+                                selectedRegion === E_REGION.CENTER
                                     ? 'border-gray-800 text-gray-800'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                             ]"
@@ -64,10 +64,10 @@
                             Central Laos
                         </button>
                         <button
-                            @click="selectedRegion = 'south'"
+                            @click="onRegionSelect(E_REGION.SOUTH)"
                             :class="[
                                 'py-2 px-6 text-lg font-medium border-b-2 transition-colors',
-                                selectedRegion === 'south'
+                                selectedRegion === E_REGION.SOUTH
                                     ? 'border-gray-800 text-gray-800'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                             ]"
@@ -80,57 +80,75 @@
 
             <!-- Filter & Search Section -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <!-- Search -->
-                    <div class="md:col-span-2">
-                        <div class="relative">
-                            <input
-                                v-model="searchQuery"
-                                type="text"
-                                placeholder="Search places..."
-                                class="w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                <div class="md:col-span-2">
+                    <div class="relative">
+                        <input
+                            v-model="search"
+                            @keyup.enter="handleSearch"
+                            type="text"
+                            placeholder="Search places..."
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 pr-24 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                        />
+
+                        <!-- Search Icon (Left) -->
+                        <svg
+                            class="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                             />
-                            <svg
-                                class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                        </svg>
+
+                        <!-- Right Side Buttons -->
+                        <div
+                            class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1"
+                        >
+                            <!-- Clear Button -->
+                            <Transition
+                                enter-active-class="transition-opacity duration-200"
+                                leave-active-class="transition-opacity duration-200"
+                                enter-from-class="opacity-0"
+                                leave-to-class="opacity-0"
                             >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
+                                <button
+                                    v-if="search"
+                                    @click="handleRefresh"
+                                    type="button"
+                                    class="p-1 mr-1 hover:bg-gray-200 rounded-full transition-colors"
+                                    title="Clear"
+                                >
+                                    <svg
+                                        class="h-4 w-4 text-gray-400 hover:text-gray-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
+                                    </svg>
+                                </button>
+                            </Transition>
+
+                            <!-- Search Button -->
+                            <button
+                                @click="handleSearch"
+                                type="button"
+                                class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="!search.trim()"
+                            >
+                                Search
+                            </button>
                         </div>
-                    </div>
-
-                    <!-- Category Filter -->
-                    <div>
-                        <select
-                            v-model="selectedCategory"
-                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-                        >
-                            <option value="">All Categories</option>
-                            <option value="temple">Temples</option>
-                            <option value="nature">Nature</option>
-                            <option value="waterfall">Waterfalls</option>
-                            <option value="cultural">Cultural Sites</option>
-                            <option value="adventure">Adventure</option>
-                        </select>
-                    </div>
-
-                    <!-- Sort By -->
-                    <div>
-                        <select
-                            v-model="sortBy"
-                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-                        >
-                            <option value="rating">Highest Rated</option>
-                            <option value="name">Name (A-Z)</option>
-                            <option value="popular">Most Popular</option>
-                        </select>
                     </div>
                 </div>
             </div>
@@ -138,249 +156,224 @@
             <!-- Results Count -->
             <div class="mb-6">
                 <h2 class="text-2xl font-bold text-gray-900">
-                    {{ filteredPlaces.length }} Places Found
+                    {{ tourPlaceStore?.pagination?.count }} items
                 </h2>
             </div>
 
-            <!-- Places Grid -->
-
+            <!-- Tour Places -->
             <div>
-                <TourPlace
-                    :places="paginatedPlaces"
-                    @view-place-details="viewPlaceDetails"
-                />
+                <div v-if="tourPlaceLoading">
+                    <LoadingCard :item="tourPlaceItemsPerPage" />
+                </div>
+                <div
+                    v-if="
+                        !tourPlaceLoading &&
+                        tourPlaceStore?.pagination?.count < 1
+                    "
+                >
+                    <EmptyCard @refresh="handleRefresh" />
+                </div>
+                <div
+                    v-if="
+                        !tourPlaceLoading &&
+                        tourPlaceStore?.pagination?.count > 0
+                    "
+                >
+                    <TourPlace
+                        :places="tourPlaceStore?.pagination?.rows"
+                        :region="selectedRegion"
+                    />
+                </div>
             </div>
 
-            <!-- Pagination -->
+            <!-- Places Pagination -->
+
             <Pagination
                 class="my-8"
-                v-model:currentPage="currentPage"
-                :totalPages="totalPages"
-                @pageChange="onPageChange"
+                v-model:currentPage="placeCurrentPage"
+                :totalPages="tourPlaceTotalPages"
+                @pageChange="handleTourPlacePageChange"
             />
         </main>
     </div>
 </template>
 
-<script setup>
-import { TourPlace } from "#components";
+<script setup lang="ts">
+const { setQueryServerSide, isQueryServerSide } = useMainStore();
+const route = useRoute();
 
-definePageMeta({
-    title: "Tourist Places - ASASA Tour",
-});
+const tourPlaceStore = useTourPlaceStore();
 
-// State
-const selectedRegion = ref("all");
-const searchQuery = ref("");
-const selectedCategory = ref("");
-const sortBy = ref("rating");
-const currentPage = ref(1);
-const itemsPerPage = 6;
+const tourPlaceLoading = ref(false);
+const tourPlaceCurrentPage = ref(1);
+const tourPlaceItemsPerPage = ref(3);
 
-// Places data
-const places = ref([
-    {
-        id: 1,
-        name: "Kuang Si Waterfalls",
-        description:
-            "Stunning turquoise cascading waterfalls surrounded by lush jungle, perfect for swimming and photography",
-        location: "Luang Prabang",
-        region: "north",
-        category: "waterfall",
-        rating: 4.9,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Swimming", "Hiking", "Photography"],
-    },
-    {
-        id: 2,
-        name: "Wat Xieng Thong",
-        description:
-            "Ancient Buddhist temple with exquisite architecture and historical significance",
-        location: "Luang Prabang",
-        region: "north",
-        category: "temple",
-        rating: 4.8,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["UNESCO Site", "Architecture", "History"],
-    },
-    {
-        id: 3,
-        name: "Pha That Luang",
-        description:
-            "Golden stupa and national symbol of Laos, a must-visit landmark in Vientiane",
-        location: "Vientiane",
-        region: "central",
-        category: "cultural",
-        rating: 4.7,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Iconic", "Religious", "Photography"],
-    },
-    {
-        id: 4,
-        name: "Blue Lagoon",
-        description:
-            "Crystal clear natural pool perfect for swimming and cliff jumping in stunning surroundings",
-        location: "Vang Vieng",
-        region: "central",
-        category: "nature",
-        rating: 4.6,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Swimming", "Adventure", "Nature"],
-    },
-    {
-        id: 5,
-        name: "Bolaven Plateau",
-        description:
-            "Highland region known for coffee plantations, waterfalls, and cool climate",
-        location: "Pakse",
-        region: "south",
-        category: "nature",
-        rating: 4.8,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Coffee", "Waterfalls", "Trekking"],
-    },
-    {
-        id: 6,
-        name: "Si Phan Don (4000 Islands)",
-        description:
-            "Peaceful river archipelago with laid-back atmosphere and rare Irrawaddy dolphins",
-        location: "Champasak",
-        region: "south",
-        category: "nature",
-        rating: 4.9,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Dolphins", "Islands", "Relaxation"],
-    },
-    {
-        id: 7,
-        name: "Plain of Jars",
-        description:
-            "Mysterious ancient megalithic stone jars scattered across the landscape",
-        location: "Xieng Khouang",
-        region: "north",
-        category: "cultural",
-        rating: 4.7,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["UNESCO Site", "Mystery", "History"],
-    },
-    {
-        id: 8,
-        name: "Tham Kong Lo Cave",
-        description: "Massive 7km long river cave that can be explored by boat",
-        location: "Khammouane",
-        region: "central",
-        category: "adventure",
-        rating: 4.8,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Cave", "Boat Tour", "Adventure"],
-    },
-    {
-        id: 9,
-        name: "Mount Phousi",
-        description:
-            "Sacred hill offering panoramic views of Luang Prabang and surrounding mountains",
-        location: "Luang Prabang",
-        region: "north",
-        category: "nature",
-        rating: 4.6,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Sunset", "Views", "Temple"],
-    },
-    {
-        id: 10,
-        name: "Patuxai Monument",
-        description:
-            "Victory monument resembling the Arc de Triomphe with observation deck",
-        location: "Vientiane",
-        region: "central",
-        category: "cultural",
-        rating: 4.5,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Monument", "Views", "Architecture"],
-    },
-    {
-        id: 11,
-        name: "Tad Fane Waterfall",
-        description: "Twin waterfalls plunging dramatically into a deep gorge",
-        location: "Champasak",
-        region: "south",
-        category: "waterfall",
-        rating: 4.7,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Waterfall", "Viewpoint", "Nature"],
-    },
-    {
-        id: 12,
-        name: "Buddha Park (Xieng Khuan)",
-        description:
-            "Sculpture park featuring over 200 Hindu and Buddhist statues",
-        location: "Vientiane",
-        region: "central",
-        category: "cultural",
-        rating: 4.6,
-        image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-        highlights: ["Sculptures", "Unique", "Photography"],
-    },
-]);
+const selectedRegion = ref("");
+const search = ref("");
 
-// Computed properties
-const filteredPlaces = computed(() => {
-    let result = places.value;
+// Detect screen size and set items per page
+const updateItemsPerPage = () => {
+    const width = window.innerWidth;
 
-    // Filter by region
-    if (selectedRegion.value !== "all") {
-        result = result.filter(
-            (place) => place.region === selectedRegion.value,
-        );
+    if (width < 806) {
+        tourPlaceItemsPerPage.value = 1;
+    } else if (width >= 806 && width < 1024) {
+        tourPlaceItemsPerPage.value = 4;
+    } else {
+        tourPlaceItemsPerPage.value = 6;
     }
 
-    // Filter by category
-    if (selectedCategory.value) {
-        result = result.filter(
-            (place) => place.category === selectedCategory.value,
-        );
-    }
-
-    // Search filter
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        result = result.filter(
-            (place) =>
-                place.name.toLowerCase().includes(query) ||
-                place.description.toLowerCase().includes(query) ||
-                place.location.toLowerCase().includes(query),
-        );
-    }
-
-    // Sort
-    if (sortBy.value === "rating") {
-        result = [...result].sort((a, b) => b.rating - a.rating);
-    } else if (sortBy.value === "name") {
-        result = [...result].sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortBy.value === "popular") {
-        result = [...result].sort((a, b) => b.rating - a.rating);
-    }
-
-    return result;
-});
-
-const totalPages = computed(() => {
-    return Math.ceil(filteredPlaces.value.length / itemsPerPage);
-});
-
-const paginatedPlaces = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredPlaces.value.slice(start, end);
-});
-
-// Methods
-const viewPlaceDetails = (place) => {
-    navigateTo(`/tourist-place/${place.id}`);
+    tourPlaceFilters.value.limit = tourPlaceItemsPerPage.value;
 };
 
-// Watch for filter changes to reset page
-watch([selectedRegion, searchQuery, selectedCategory, sortBy], () => {
-    currentPage.value = 1;
+const tourPlaceFilters: any = ref({
+    page: tourPlaceCurrentPage.value,
+    limit: tourPlaceItemsPerPage.value,
+    sortBy: "createdAt",
+    order: "DESC",
 });
+
+/**
+ *  onMounted
+ */
+onMounted(async () => {
+    // Set items per page based on screen size
+    updateItemsPerPage();
+
+    // Add resize listener
+    window.addEventListener("resize", updateItemsPerPage);
+
+    // Initialize selectedRegion from query params
+    selectedRegion.value = (route.query.region as string) || "";
+
+    if (!isQueryServerSide) {
+        tourPlaceLoading.value = true;
+        const filters = {
+            ...tourPlaceFilters.value,
+            ...(selectedRegion.value && { region: selectedRegion.value }),
+        };
+        await tourPlaceStore.setPagination(filters);
+        tourPlaceLoading.value = false;
+    }
+    await setQueryServerSide(false);
+});
+
+// Cleanup resize listener
+onUnmounted(() => {
+    window.removeEventListener("resize", updateItemsPerPage);
+});
+
+if (import.meta.server) {
+    // Initialize selectedRegion from query params on server
+    selectedRegion.value = (route.query.region as string) || "";
+
+    tourPlaceLoading.value = true;
+    const filters = {
+        ...tourPlaceFilters.value,
+        ...(selectedRegion.value && { region: selectedRegion.value }),
+    };
+    tourPlaceStore.setPagination(filters);
+    tourPlaceLoading.value = false;
+}
+
+/*
+ * Computed properties for pagination
+ */
+const tourPlaceTotalPages = computed(() => {
+    return Math.ceil(
+        tourPlaceStore.pagination.count / tourPlaceItemsPerPage.value,
+    );
+});
+
+/*
+ * Pagination handlers
+ */
+const handleTourPlacePageChange = async (page: number) => {
+    tourPlaceLoading.value = true;
+    tourPlaceCurrentPage.value = page;
+    tourPlaceFilters.value.page = page;
+    const filters = {
+        ...tourPlaceFilters.value,
+        ...(selectedRegion.value && { region: selectedRegion.value }),
+    };
+    await tourPlaceStore.setPagination(filters);
+    tourPlaceLoading.value = false;
+};
+
+/*
+ * Search handlers
+ */
+
+const handleSearch = async () => {
+    if (!search.value.trim()) return;
+
+    tourPlaceLoading.value = true;
+    tourPlaceCurrentPage.value = 1;
+    tourPlaceFilters.value.page = 1;
+    tourPlaceFilters.value.search = search.value;
+
+    const filters = {
+        ...tourPlaceFilters.value,
+        ...(selectedRegion.value && { region: selectedRegion.value }),
+        ...(search.value && { search: search.value }),
+    };
+
+    await tourPlaceStore.setPagination(filters);
+    tourPlaceLoading.value = false;
+};
+
+/*
+ * Refresh handlers
+ */
+const handleRefresh = async () => {
+    tourPlaceLoading.value = true;
+    tourPlaceCurrentPage.value = 1;
+    tourPlaceFilters.value.page = 1;
+    search.value = "";
+    tourPlaceFilters.value.search = "";
+    const filters = {
+        ...tourPlaceFilters.value,
+        ...(selectedRegion.value && { region: selectedRegion.value }),
+    };
+    await tourPlaceStore.setPagination(filters);
+    tourPlaceLoading.value = false;
+};
+
+const onRegionSelect = async (region: string) => {
+    tourPlaceLoading.value = true;
+    selectedRegion.value = region;
+    tourPlaceCurrentPage.value = 1;
+    tourPlaceFilters.value.page = 1;
+
+    // Update URL query params
+    await navigateTo({
+        query: {
+            ...(region && { region }),
+        },
+    });
+
+    const filters = {
+        ...tourPlaceFilters.value,
+        ...(selectedRegion.value && { region: selectedRegion.value }),
+    };
+
+    await tourPlaceStore.setPagination(filters);
+    tourPlaceLoading.value = false;
+};
+
+/*
+ * Watch for region changes in query params (after initial mount)
+ */
+watch(
+    () => route.query.region,
+    async (newRegion, oldRegion) => {
+        // Skip if it's the initial load (handled by onMounted)
+        if (oldRegion === undefined) return;
+
+        // Only update if the region actually changed
+        if (newRegion !== selectedRegion.value) {
+            await onRegionSelect((newRegion as string) || "");
+        }
+    },
+);
 </script>

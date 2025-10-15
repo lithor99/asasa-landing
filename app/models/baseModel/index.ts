@@ -23,3 +23,17 @@ export interface ResponseModel {
     message: string;
     code: number;
 }
+
+export interface Address {
+    en?: string;
+    lo?: string;
+}
+export interface Name {
+    en?: string;
+    lo?: string;
+}
+
+export interface Detail {
+    en?: string;
+    lo?: string;
+}

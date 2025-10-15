@@ -154,6 +154,69 @@ export const formatDate = (
     return new Intl.DateTimeFormat(locale, options).format(dateObj);
 };
 
+
+/**
+ * Count the number of days from a given date to now
+ * @param date - The date to count from (Date, string, or number)
+ * @param includeTime - Whether to include hours in the calculation (default: false)
+ * @returns Number of days (positive for past dates, negative for future dates)
+ */
+export const countDays = (
+    date: Date | string | number | null | undefined,
+    includeTime: boolean = false
+): string => {
+    if (!date) return 'just now';
+
+    const dateObj = typeof date === 'string' || typeof date === 'number' 
+        ? new Date(date) 
+        : date;
+
+    if (isNaN(dateObj.getTime())) return 'invalid date';
+
+    const now = new Date();
+    const diffMs = now.getTime() - dateObj.getTime();
+    
+    // Handle future dates
+    if (diffMs < 0) {
+        const futureDiffMs = Math.abs(diffMs);
+        const futureMinutes = Math.floor(futureDiffMs / (1000 * 60));
+        const futureHours = Math.floor(futureDiffMs / (1000 * 60 * 60));
+        const futureDays = Math.floor(futureDiffMs / (1000 * 60 * 60 * 24));
+        
+        if (futureMinutes < 60) {
+            return futureMinutes === 1 ? 'in 1 minute' : `in ${futureMinutes} minutes`;
+        }
+        if (futureHours < 24) {
+            return futureHours === 1 ? 'in 1 hour' : `in ${futureHours} hours`;
+        }
+        return futureDays === 1 ? 'in 1 day' : `in ${futureDays} days`;
+    }
+    
+    // Calculate different time units
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    // Just now (less than 1 minute)
+    if (seconds < 60) {
+        return 'just now';
+    }
+    
+    // Less than 1 hour - show minutes
+    if (minutes < 60) {
+        return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+    }
+    
+    // Less than 1 day - show hours
+    if (hours < 24) {
+        return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+    }
+    
+    // 1 day or more - show days
+    return days === 1 ? '1 day ago' : `${days} days ago`;
+};
+
 /**
  * Format phone number
  * @param phone - Phone number string

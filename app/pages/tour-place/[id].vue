@@ -1,56 +1,54 @@
 <template>
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-gray-50 pt-4 pb-12">
+        <!-- Breadcrumb -->
+        <Breadcrumb :items="breadcrumbItems" />
         <!-- Hero Section with Image -->
-        <div class="relative h-[60vh] md:h-[70vh] overflow-hidden">
-            <img
-                :src="place.image"
-                :alt="place.name"
-                class="w-full h-full object-cover"
-            />
-            <div
-                class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"
-            ></div>
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="relative group">
+                <img
+                    :src="`${CDN()}${tourPlaceStore?.tourPlace?.image}`"
+                    :alt="tourPlaceStore?.tourPlace?.name?.lo"
+                    class="w-full object-cover rounded-lg shadow-md"
+                    :style="{ height: '70vh' }"
+                />
 
-            <!-- Title & Info Overlay -->
-            <div
-                class="absolute bottom-0 left-0 right-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8"
-            >
-                <div class="flex items-start justify-between flex-wrap gap-4">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-3">
-                            <span
-                                class="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full capitalize"
-                            >
-                                {{ place.category }}
-                            </span>
-                        </div>
+                <!-- Overlay - no container classes -->
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent rounded-lg"
+                >
+                    <!-- Content with container classes if needed -->
+                    <div class="h-full flex items-end mx-6 py-4">
+                        <h1 class="text-white text-4xl font-bold">
+                            {{ tourPlaceStore?.tourPlace?.name?.lo }}
+                        </h1>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Main Content -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="bg-white rounded-xl shadow-md p-6 md:p-8 mb-8">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                    {{ place.name }}
-                </h2>
+                <!-- <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                    {{ tourPlaceStore?.tourPlace?.name?.lo }}
+                </h2> -->
                 <div class="flex items-center gap-2 text-md text-gray-500 mb-3">
                     <Icon name="gis:location-poi" class="w-6 h-6" />
-                    <span>{{ place.location }}</span>
+                    <span>{{ tourPlaceStore?.tourPlace?.address?.lo }}</span>
                 </div>
                 <p class="text-gray-700 text-lg leading-relaxed">
-                    {{ place.description }}
+                    {{ tourPlaceStore?.tourPlace?.detail?.lo }}
                 </p>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Column -->
                 <div class="lg:col-span-2 space-y-8">
-                    <!-- Description Section -->
-
-                    <!-- Image Gallery (if images exist) -->
+                    <!-- Image Gallery -->
                     <div
-                        v-if="place.images && place.images.length > 0"
+                        v-if="
+                            tourPlaceStore?.tourPlace?.images &&
+                            tourPlaceStore?.tourPlace?.images.length > 0
+                        "
                         class="bg-white rounded-xl shadow-md p-6 md:p-8"
                     >
                         <h2
@@ -69,7 +67,8 @@
                             "
                         >
                             <div
-                                v-for="(image, index) in place.images"
+                                v-for="(image, index) in tourPlaceStore
+                                    ?.tourPlace?.images"
                                 :key="index"
                                 v-show="showAllImages || index < 6"
                                 :class="getImageClass(index)"
@@ -77,16 +76,16 @@
                                 @click="openGallery(index)"
                             >
                                 <img
-                                    :src="image"
-                                    :alt="`${place.name} - Photo ${index + 1}`"
+                                    :src="`${CDN()}${image}`"
+                                    :alt="`Photo ${index + 1}`"
                                     class="w-full h-full object-cover"
                                 />
                             </div>
                         </div>
 
-                        <!-- Show More Button (if more than 6 images) -->
+                        <!-- Show More Button -->
                         <div
-                            v-if="place.images.length > 6"
+                            v-if="tourPlaceStore?.tourPlace?.images.length > 6"
                             class="mt-6 flex justify-center"
                         >
                             <div
@@ -126,12 +125,20 @@
                                     </svg>
                                     <div>
                                         <p class="text-sm text-gray-500">
-                                            Category
+                                            Country
                                         </p>
                                         <p
                                             class="font-semibold text-gray-900 capitalize"
                                         >
-                                            {{ place.category }}
+                                            {{
+                                                C_COUNTRY.find(
+                                                    (c: any) =>
+                                                        c.value ===
+                                                        tourPlaceStore
+                                                            ?.tourPlace
+                                                            ?.countryCode,
+                                                )?.lo || "Foreign"
+                                            }}
                                         </p>
                                     </div>
                                 </div>
@@ -157,38 +164,42 @@
                                         <p
                                             class="font-semibold text-gray-900 capitalize"
                                         >
-                                            {{ place.region }}
+                                            {{
+                                                C_REGION.find(
+                                                    (r: any) =>
+                                                        r.value ===
+                                                        tourPlaceStore
+                                                            ?.tourPlace?.region,
+                                                )?.lo ||
+                                                tourPlaceStore?.tourPlace
+                                                    ?.region
+                                            }}
                                         </p>
                                     </div>
                                 </div>
 
                                 <div class="flex items-start gap-3">
-                                    <svg
-                                        class="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                        aria-hidden="true"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                        />
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                        />
-                                    </svg>
+                                    <Icon
+                                        name="pajamas:eye"
+                                        class="w-5 h-5 text-gray-400"
+                                    />
                                     <div>
                                         <p class="text-sm text-gray-500">
-                                            Review
+                                            View
                                         </p>
                                         <p class="font-semibold text-gray-900">
-                                            {{ place.review }}
+                                            {{
+                                                tourPlaceStore?.tourPlace?.views
+                                            }}
+                                            <span
+                                                v-if="
+                                                    tourPlaceStore?.tourPlace
+                                                        ?.views > 1
+                                                "
+                                            >
+                                                views</span
+                                            >
+                                            <span v-else> view</span>
                                         </p>
                                     </div>
                                 </div>
@@ -236,54 +247,297 @@
                 </div>
             </div>
         </div>
+
+        <!-- Image Gallery Dialog/Lightbox -->
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition-opacity duration-300"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-300"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div
+                    v-if="isGalleryOpen"
+                    class="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+                    @click="closeGallery"
+                >
+                    <!-- Close Button -->
+                    <button
+                        @click.stop="closeGallery"
+                        class="absolute top-4 right-4 z-50 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
+                        aria-label="Close gallery"
+                    >
+                        <svg
+                            class="w-8 h-8"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+
+                    <!-- Image Counter -->
+                    <div
+                        class="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-black/50 text-white rounded-full text-sm"
+                    >
+                        {{ currentImageIndex + 1 }} /
+                        {{ tourPlaceStore?.tourPlace?.images?.length || 0 }}
+                    </div>
+
+                    <!-- Main Image Container -->
+                    <div
+                        class="relative w-full h-full flex items-center justify-center p-4 md:p-8"
+                        @click.stop
+                    >
+                        <!-- Previous Button -->
+                        <button
+                            v-if="
+                                tourPlaceStore?.tourPlace?.images &&
+                                tourPlaceStore.tourPlace.images.length > 1
+                            "
+                            @click.stop="previousImage"
+                            class="absolute left-4 z-50 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+                            aria-label="Previous image"
+                        >
+                            <svg
+                                class="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M15 19l-7-7 7-7"
+                                />
+                            </svg>
+                        </button>
+
+                        <!-- Image -->
+                        <img
+                            :src="`${CDN()}${
+                                tourPlaceStore?.tourPlace?.images[
+                                    currentImageIndex
+                                ]
+                            }`"
+                            :alt="`Photo ${currentImageIndex + 1}`"
+                            class="max-w-full max-h-full object-contain"
+                        />
+
+                        <!-- Next Button -->
+                        <button
+                            v-if="
+                                tourPlaceStore?.tourPlace?.images &&
+                                tourPlaceStore.tourPlace.images.length > 1
+                            "
+                            @click.stop="nextImage"
+                            class="absolute right-4 z-50 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+                            aria-label="Next image"
+                        >
+                            <svg
+                                class="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5l7 7-7 7"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Thumbnail Strip (Optional) -->
+                    <div
+                        class="absolute bottom-4 left-0 right-0 z-50 px-4"
+                        @click.stop
+                    >
+                        <div
+                            class="flex gap-2 overflow-x-auto pb-2 justify-center scrollbar-hide"
+                        >
+                            <button
+                                v-for="(image, index) in tourPlaceStore
+                                    ?.tourPlace?.images"
+                                :key="index"
+                                @click.stop="currentImageIndex = index"
+                                class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all"
+                                :class="
+                                    currentImageIndex === index
+                                        ? 'border-white scale-110'
+                                        : 'border-transparent opacity-50 hover:opacity-100'
+                                "
+                            >
+                                <img
+                                    :src="`${CDN()}${image}`"
+                                    :alt="`Thumbnail ${index + 1}`"
+                                    class="w-full h-full object-cover"
+                                />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
     </div>
 </template>
 
 <script setup lang="ts">
-interface Place {
-    id: number;
-    name: string;
-    description: string;
-    location: string;
-    region: string;
-    category: string;
-    review: number;
-    image: string;
-    images?: string[];
-    highlights: string[];
-}
-
-// Sample data - replace with API call or props
-const place = ref<Place>({
-    id: 8,
-    name: "Tham Kong Lo Cave",
-    description:
-        "Massive 7km long river cave that can be explored by boat. This stunning natural wonder features impressive limestone formations, underground rivers, and breathtaking chambers. The journey through the cave is an unforgettable adventure, taking you deep into the heart of the karst landscape. Visitors can experience the unique ecosystem and geological formations that have been formed over millions of years.",
-    location: "Khammouane",
-    region: "central",
-    category: "adventure",
-    review: 2000,
-    image: "https://www.baltana.com/files/wallpapers-27/Laos-Tourism-HD-Background-Wallpaper-86452.jpg",
-    images: [
-        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
-        "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800",
-        "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
-        "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1",
-        "https://images.unsplash.com/photo-1530789253388-582c481c54b0",
-        "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
-        "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
-        "https://images.unsplash.com/photo-1472214103451-9374bd1c798e",
-    ],
-    highlights: ["Cave", "Boat Tour", "Adventure", "Natural Wonder"],
+definePageMeta({
+    layout: "detail",
 });
+const { setQueryServerSide, isQueryServerSide } = useMainStore();
+const tourPlaceStore = useTourPlaceStore();
+const route = useRoute();
+const { id } = route.params;
 
+const tourPlaceLoading = ref(false);
 const showAllImages = ref(false);
 
-// Gallery function (can be implemented with a lightbox)
+// Gallery state
+const isGalleryOpen = ref(false);
+const currentImageIndex = ref(0);
+
+/**
+ *  onMounted
+ */
+onMounted(async () => {
+    if (!isQueryServerSide) {
+        tourPlaceLoading.value = true;
+        await tourPlaceStore.setOne(id as string);
+        tourPlaceLoading.value = false;
+    }
+    await setQueryServerSide(false);
+});
+
+if (import.meta.server) {
+    tourPlaceLoading.value = true;
+    await tourPlaceStore.setOne(id as string);
+    tourPlaceLoading.value = false;
+}
+
+// Breadcrumb items
+const breadcrumbItems = computed(() => {
+    const items = [
+        { label: "Home", to: "/" },
+        // { label: "Tourist Places", to: "/tour-place" },
+    ];
+
+    // Add region from query params if available
+    if (route.query.region) {
+        const regionQueryValue = Array.isArray(route.query.region)
+            ? route.query.region[0]
+            : route.query.region;
+        const regionValueStr = String(regionQueryValue);
+        const regionLabel =
+            C_REGION.find((r: any) => r.value === regionValueStr)?.en ||
+            regionValueStr;
+
+        items.push({
+            label: "Tourist Places",
+            to: `/tour-place?region=${encodeURIComponent(regionValueStr)}`,
+        });
+
+        // this route can not be clickable
+        items.push({
+            label: regionLabel,
+            to: `/tour-place`,
+        });
+    }
+
+    // Add region from store data if available
+    if (!route.query.region) {
+        items.push({
+            label: "Tourist Places",
+            to: `/tour-place`,
+        });
+
+        // this route can not be clickable
+        items.push({
+            label: "All Regions",
+            to: `/tour-place`,
+        });
+    }
+
+    // Add current place name from route params or store
+    // const placeName =
+    //     tourPlaceStore?.tourPlace?.name?.lo ||
+    //     (Array.isArray(route.params.name)
+    //         ? route.params.name[0]
+    //         : route.params.name);
+    // if (placeName) {
+    //     items.push({
+    //         label: placeName,
+    //         to: `/tour-place/${id}`,
+    //     });
+    // }
+
+    console.log("Breadcrumb items:", items);
+
+    return items;
+});
+
+// Gallery functions
 const openGallery = (index: number) => {
-    console.log("Open gallery at index:", index);
-    // Implement lightbox/modal gallery here
+    currentImageIndex.value = index;
+    isGalleryOpen.value = true;
+    // Prevent body scroll when gallery is open
+    document.body.style.overflow = "hidden";
 };
+
+const closeGallery = () => {
+    isGalleryOpen.value = false;
+    // Restore body scroll
+    document.body.style.overflow = "";
+};
+
+const nextImage = () => {
+    const images = tourPlaceStore?.tourPlace?.images || [];
+    if (images.length > 0) {
+        currentImageIndex.value = (currentImageIndex.value + 1) % images.length;
+    }
+};
+
+const previousImage = () => {
+    const images = tourPlaceStore?.tourPlace?.images || [];
+    if (images.length > 0) {
+        currentImageIndex.value =
+            currentImageIndex.value === 0
+                ? images.length - 1
+                : currentImageIndex.value - 1;
+    }
+};
+
+// Keyboard navigation
+const handleKeyPress = (e: KeyboardEvent) => {
+    if (!isGalleryOpen.value) return;
+
+    if (e.key === "Escape") closeGallery();
+    if (e.key === "ArrowRight") nextImage();
+    if (e.key === "ArrowLeft") previousImage();
+};
+
+// Add keyboard event listener
+onMounted(() => {
+    window.addEventListener("keydown", handleKeyPress);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("keydown", handleKeyPress);
+    // Cleanup body overflow in case component unmounts while gallery is open
+    document.body.style.overflow = "";
+});
 
 // Get dynamic image classes based on position
 const getImageClass = (index: number): string => {
@@ -310,12 +564,16 @@ const getImageClass = (index: number): string => {
             return "col-span-6 md:col-span-4 h-32 md:h-40";
     }
 };
-
-// You can fetch data from API like this:
-// const route = useRoute();
-// const { data: place } = await useFetch(`/api/places/${route.params.id}`);
 </script>
 
 <style scoped>
-/* Add any custom styles here */
+/* Hide scrollbar for thumbnail strip */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
 </style>

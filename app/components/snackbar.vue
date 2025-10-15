@@ -21,7 +21,7 @@ watchEffect(() => {
 <template>
     <div
         v-if="mainStore.isShowSnackbar?.isOpen"
-        :class="`border-[1px] border-opacity-80 fixed top-14 ml-4 right-4 z-50 ${
+        :class="`border-[1px] border-opacity-80 fixed top-8 ml-4 right-4 z-50 ${
             mainStore.isShowSnackbar.isSuccess
                 ? 'border-success text-white bg-success'
                 : 'border-danger text-white bg-danger'

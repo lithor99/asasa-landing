@@ -27,36 +27,54 @@ const props = defineProps<Props>();
                     :alt="tour?.name?.la"
                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 />
-                <!-- <div
-                    class="absolute top-4 right-4 bg-red-500 px-3 py-1 rounded-full text-md font-semibold text-white"
+                <span
+                    class="flex items-center absolute top-4 right-4 bg-gradient-to-r from-red-600 to-red-400 px-3 py-2 rounded-xl text-md font-semibold text-white hover:!scale-110"
+                    style="transform: rotate(3deg)"
                 >
-                    {{ formatCurrency(tour?.price) }}
-                </div> -->
+                    <Icon
+                        name="mingcute:user-3-line"
+                        class="text-white w-5 h-5 mr-2"
+                    />
+                    {{ formatCurrency(tour?.pricePerPerson) }}
+                </span>
+
+                <span
+                    class="flex items-center absolute top-16 right-4 bg-gradient-to-r from-orange-600 to-orange-400 px-3 py-2 rounded-xl text-md font-semibold text-white hover:!scale-110"
+                    style="transform: rotate(-8deg)"
+                >
+                    <Icon
+                        name="mingcute:group-3-line"
+                        class="text-white w-5 h-5 mr-2"
+                    />
+                    {{ formatCurrency(tour?.pricePerGroup) }}
+                </span>
             </div>
 
             <!-- Tour Content -->
-            <div class="p-6">
+            <div class="pt-4 pb-6 px-6">
                 <div
                     class="flex items-center justify-between gap-2 mb-2 text-xs text-gray-500"
                 >
                     <span class="flex items-center gap-1 font-semibold">
                         <Icon
                             name="hugeicons:date-time"
-                            class="text-orange-400 w-4 h-4"
+                            class="w-4 h-4 text-red-500"
                         />
                         {{ tour?.travelDays }}
+
+                        <span v-if="tour?.travelDays < 1">
+                            day for sightseeing
+                        </span>
+                        <span v-else> days for sightseeing </span>
                     </span>
                     <span
-                        class="flex items-center border border-1 h-8 text-xl rounded font-semibold rounded-full px-2 py-1 h-6 border-gray-300"
+                        class="flex items-center border border-1 rounded font-semibold rounded-full px-2 py-1 border-gray-300"
                     >
-                        <Icon
-                            name="mingcute:user-3-line"
-                            class="text-blue-500 w-4 h-4"
-                        />
-
-                        <span class="ml-2">{{
-                            formatCurrency(tour?.pricePerPerson)
-                        }}</span>
+                        {{
+                            C_TOUR_TYPE.find(
+                                (item: any) => item.value === tour?.tourType,
+                            )?.en
+                        }}
                     </span>
                     <!-- <span
                         class="flex items-center border border-1 h-6 rounded font-semibold rounded-full px-2 py-1 h-6 border-gray-300"
@@ -81,7 +99,7 @@ const props = defineProps<Props>();
                     </span> -->
                 </div>
 
-                <h3 class="text-xl font-bold text-gray-900 mb-2">
+                <h3 class="text-xl font-bold text-gray-900 mb-2 mt-2">
                     {{ tour?.name?.lo }}
                 </h3>
                 <p class="text-gray-600 text-sm mb-4 line-clamp-2">
@@ -89,14 +107,14 @@ const props = defineProps<Props>();
                 </p>
 
                 <!-- Action Buttons -->
-                <div class="flex justify-end">
+                <!-- <div class="flex justify-end">
                     <button
                         @click.stop="bookTour(tour)"
                         class="w-auto bg-gray-700 text-white rounded-3xl px-4 py-3 text-sm font-medium hover:bg-gray-900 transition-colors"
                     >
                         Book Now
                     </button>
-                </div>
+                </div> -->
             </div>
 
             <!-- Overlay -->
@@ -105,25 +123,31 @@ const props = defineProps<Props>();
             ></div>
         </div>
     </div>
-    <!-- <div class="flex justify-center">
-        <Pagination
-            class="my-8"
-            v-model:currentPage="tours.currentPage"
-            :totalPages="tours.count"
-            @pageChange="onPageChange"
-        />
-    </div> -->
 </template>
 
 <script lang="ts">
+const showBookingDialog = ref(false);
+const selectedTour = ref<TourPackageModel | null>(null);
+const isBooking = ref(false);
+
 const viewTour = (tour: TourPackageModel) => {
-    console.log("View tour:", tour);
-    alert(`Booking tour... ${tour?.name?.lo}`);
     navigateTo(`/tour/domestic/${tour.id}`);
 };
 
 const bookTour = (tour: TourPackageModel) => {
-    console.log("Book tour clicked!");
+    console.log("Book tour!");
     alert(`Booking tour... ${tour?.name?.lo}`);
+    showBookingDialog.value = true;
+    selectedTour.value = tour;
+};
+
+const handleBookingSubmit = (data: any) => {
+    console.log("Booking data:", data);
+    isBooking.value = true;
+    setTimeout(() => {
+        isBooking.value = false;
+        showBookingDialog.value = false;
+        alert("Booking successful!");
+    }, 2000);
 };
 </script>
